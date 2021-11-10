@@ -1,37 +1,66 @@
 pipeline {
   agent any
-  tools {nodejs "node"}
-  
+
   stages {
-    stage('Install dependencies') {
+    stage('Build & Test') {
+      agent {
+        docker {
+          image 'node:14.17.0-alpine'
+          reuseNode true
+        }
+      }
       steps {
-        sh 'npm install'
+        sh 'yarn install'
+        sh 'yarn test'
+        sh 'yarn test:cov'
       }
     }
 
-    stage('Test') {
+    stage('Coding Standard') {
+      agent {
+        docker {
+          image 'node:14.17.0-alpine'
+          reuseNode true
+        }
+      }
       steps {
-         sh 'npm test'
+        sh 'yarn lint:test'
       }
     }
-    
-    stage('Test Cov') {
-      steps {
-         sh 'npm run test:cov'
-      }
-    }
-    
-    stage('Sonarqube') {
+
+    stage('Sonarqube Analysis') {
       environment {
         scannerHome = tool 'sonarqube-scanner'
       }
 
       steps {
         withSonarQubeEnv(installationName: 'sonarqube') {
-          sh "${scannerHome}/bin/sonar-scanner"
+          sh '$scannerHome/bin/sonar-scanner'
         }
       }
     }
 
+    stage('Quality Gate') {
+      steps {
+        timeout(time: 1, unit: 'HOURS') {
+          waitForQualityGate abortPipeline: true
+        }
+      }
+    }
+  }
+
+  post {
+    failure {
+      emailext subject: "Jenkins Build ${currentBuild.currentResult}: Job ${env.JOB_NAME}",
+        body: "${currentBuild.currentResult}: Job ${env.JOB_NAME} build ${env.BUILD_NUMBER}\n More info at: ${env.BUILD_URL}",
+        recipientProviders: [
+          [$class: 'DevelopersRecipientProvider'],
+          [$class: 'RequesterRecipientProvider']
+        ]
+    }
+
+    always {
+      cleanWs()
+    }
   }
 }
