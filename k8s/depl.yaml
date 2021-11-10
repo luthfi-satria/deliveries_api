@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deliveries-depl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deliveries
+  template:
+    metadata:
+      labels:
+        app: deliveries
+    spec:
+      imagePullSecrets:
+        - name: ghcr
+      containers:
+      - name: deliveries
+        image: ghcr.io/wofood/efood_deliveries
+        # resources:
+        #   limits:
+        #     memory: "128Mi"
+        #     cpu: "500m"
+        ports:
+          - name: deliveries
+            protocol: TCP
+            containerPort: 3000
+        envFrom:
+          - configMapRef:
+              name: efood-config
