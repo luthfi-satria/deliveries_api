@@ -14,15 +14,24 @@ async function bootstrap() {
         return new BadRequestException(
           errors.map((err) => {
             const { value, property, constraints } = err;
-            return { value, property, constraints: Object.values(constraints) };
+            return {
+              value,
+              property,
+              constraint: Object.keys(constraints).map((key) => {
+                return {
+                  code: `VALIDATION_${key.toUpperCase()}`,
+                  message: constraints[key],
+                };
+              }),
+            };
           }),
         );
       },
     }),
   );
 
-  app.listen(process.env.PORT || 3000, () => {
-    logger.log(`Running on ${process.env.PORT || 3000}`);
+  app.listen(process.env.HTTP_PORT || 4009, () => {
+    logger.log(`Running on ${process.env.HTTP_PORT || 4009}`);
   });
 }
 bootstrap();
