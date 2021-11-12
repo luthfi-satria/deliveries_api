@@ -43,17 +43,21 @@ export class CouriersService {
         ? true
         : false;
 
-    const [items, count] = await this.courierRepository
-      .createQueryBuilder('couriers')
-      .where(
-        `${search ? 'couriers.name ilike :search AND ' : ''} ${
-          statuses ? 'couriers.status in (:...statuses)' : ''
-        }`,
-        {
-          search,
-          statuses,
-        },
-      )
+    const query = this.courierRepository.createQueryBuilder('couriers');
+
+    if (search) {
+      query.andWhere('couriers.name ilike :search', {
+        search,
+      });
+    }
+
+    if (statuses) {
+      query.andWhere('couriers.status in (:...statuses)', {
+        statuses,
+      });
+    }
+
+    const [items, count] = await query
       .take(perPage)
       .skip((currentPage - 1) * perPage)
       .getManyAndCount()
@@ -75,14 +79,63 @@ export class CouriersService {
         );
       });
 
+    let itemsWithInfos: any[] = [];
+    if (isIncludePrice && items.length) {
+      const CourierCodesObj: any = {};
+      const CourierIndexObj: any = {};
+      const CourierPrices: any = {};
+      items.forEach((courier: any) => {
+        CourierCodesObj[courier.code] = true;
+        CourierIndexObj[courier.code + courier.service_code] = courier;
+      });
+
+      const couriersWithPrice: any[] = await this.fetchCourierService
+        .fetchCouriersWithPrice({
+          origin_latitude: originLatitude,
+          origin_longitude: originLongitude,
+          destination_latitude: destinationLatitude,
+          destination_longitude: destinationLongitude,
+          couriers: Object.keys(CourierCodesObj).join(','),
+          items: [],
+        })
+        .catch(() => {
+          throw new BadRequestException(
+            this.responseService.error(
+              HttpStatus.BAD_REQUEST,
+              {
+                value: '',
+                property: '',
+                constraint: [
+                  this.messageService.get(
+                    'delivery.getAllCouriers.courierNotFound',
+                  ),
+                ],
+              },
+              'Bad Request',
+            ),
+          );
+        });
+
+      couriersWithPrice.forEach((courier) => {
+        CourierPrices[courier.courier_code + courier.courier_service_code] =
+          courier.price;
+      });
+
+      items.forEach((courier: any) => {
+        itemsWithInfos.push({
+          ...courier,
+          ongkir: CourierPrices[courier.code + courier.service_code],
+        });
+      });
+    } else {
+      itemsWithInfos = [...items];
+    }
+
     return {
       total_item: count,
       limit: perPage,
       current_page: currentPage,
-      items: items.map((courier: any) => {
-        if (isIncludePrice) {
-          courier.ongkir = 25000;
-        }
+      items: itemsWithInfos.map((courier: any) => {
         return dbOutputTime(courier);
       }),
     };
@@ -130,7 +183,20 @@ export class CouriersService {
     const fetchData = await this.fetchCourierService
       .fetchCouriersFromBiteship()
       .catch((error) => {
-        throw error;
+        console.error(error);
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            {
+              value: '',
+              property: '',
+              constraint: [
+                this.messageService.get('delivery.fetchCouriers.fail'),
+              ],
+            },
+            'Bad Request',
+          ),
+        );
       });
 
     const couriersToSave: Partial<CourierDocument>[] = fetchData.map(
