@@ -31,6 +31,17 @@ export class CouriersService {
     const perPage = data.limit || 10;
     const currentPage = data.page || 1;
     const statuses = data.statuses?.length ? data.statuses : null;
+    const originLatitude = data.location_latitude;
+    const originLongitude = data.location_longitude;
+    const destinationLatitude = data.destination_latitude;
+    const destinationLongitude = data.destination_longitude;
+    const isIncludePrice =
+      originLatitude &&
+      originLongitude &&
+      destinationLatitude &&
+      destinationLongitude
+        ? true
+        : false;
 
     const [items, count] = await this.courierRepository
       .createQueryBuilder('couriers')
@@ -69,6 +80,9 @@ export class CouriersService {
       limit: perPage,
       current_page: currentPage,
       items: items.map((courier: any) => {
+        if (isIncludePrice) {
+          courier.ongkir = 25000;
+        }
         return dbOutputTime(courier);
       }),
     };
