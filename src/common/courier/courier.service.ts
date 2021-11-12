@@ -12,6 +12,7 @@ import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { Response } from 'src/response/response.decorator';
 import { AxiosResponse } from 'axios';
+import { FetchCourierWithPrice } from './dto/courier.dto';
 
 @Injectable()
 export class FetchCourierService {
@@ -81,9 +82,41 @@ export class FetchCourierService {
       this.logger.error(`${process.env.BITESHIP_API_BASEURL}/v1/couriers`);
       if (e.response) {
         throw new HttpException(
-          e.response.data.message,
-          e.response.data.statusCode,
+          e.response.data?.message,
+          e.response.data?.statusCode,
         );
+      } else {
+        throw new InternalServerErrorException();
+      }
+    }
+  }
+
+  async fetchCouriersWithPrice(data: FetchCourierWithPrice): Promise<any> {
+    try {
+      const headerRequest = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.BITESHIP_API_KEY}`,
+      };
+      const url = `${process.env.BITESHIP_API_BASEURL}/v1/rates/couriers`;
+      const get_request = this.httpService
+        .post(url, data, { headers: headerRequest })
+        .pipe(
+          map((axiosResponse: AxiosResponse) => {
+            return axiosResponse.data;
+          }),
+        );
+      const response = await firstValueFrom(get_request);
+
+      return response.pricing;
+    } catch (e) {
+      console.log(e.response, 'ERROR');
+
+      if (e.response.data.code == 40001002) {
+        return [];
+      }
+
+      if (e.response.data && e.response.status) {
+        throw new HttpException(e.response.data, e.response.status);
       } else {
         throw new InternalServerErrorException();
       }
