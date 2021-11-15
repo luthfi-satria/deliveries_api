@@ -82,11 +82,9 @@ export class CouriersService {
     let itemsWithInfos: any[] = [];
     if (isIncludePrice && items.length) {
       const CourierCodesObj: any = {};
-      const CourierIndexObj: any = {};
       const CourierPrices: any = {};
       items.forEach((courier: any) => {
         CourierCodesObj[courier.code] = true;
-        CourierIndexObj[courier.code + courier.service_code] = courier;
       });
 
       const couriersWithPrice: any[] = await this.fetchCourierService
