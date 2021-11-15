@@ -10,6 +10,7 @@ import { ResponseModule } from './response/response.module';
 import { CommonModule } from './common/common.module';
 import { InternalModule } from './internal/internal.module';
 import { AuthModule } from './auth/auth.module';
+import { CallbacksModule } from './callbacks/callbacks.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { AuthModule } from './auth/auth.module';
     CommonModule,
     InternalModule,
     AuthModule,
+    CallbacksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
