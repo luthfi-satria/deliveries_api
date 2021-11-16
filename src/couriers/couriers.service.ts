@@ -120,10 +120,15 @@ export class CouriersService {
       });
 
       items.forEach((courier: any) => {
-        itemsWithInfos.push({
-          ...courier,
-          ongkir: CourierPrices[courier.code + courier.service_code],
-        });
+        if (
+          CourierPrices[courier.code + courier.service_code] ||
+          CourierPrices[courier.code + courier.service_code] === 0
+        ) {
+          itemsWithInfos.push({
+            ...courier,
+            ongkir: CourierPrices[courier.code + courier.service_code],
+          });
+        }
       });
     } else {
       itemsWithInfos = [...items];

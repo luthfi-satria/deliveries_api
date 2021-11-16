@@ -17,7 +17,7 @@ export class CallbacksController {
   async biteshipOrderStatus(@Body() data: any) {
     return this.responseService.success(
       true,
-      this.messageService.get('delivery.general.success'),
+      this.messageService.get('callback.general.success'),
       this.callbacksService.biteshipOrderStatus(data),
     );
   }
