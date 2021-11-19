@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { CallbacksService } from './callbacks.service';
@@ -12,6 +12,11 @@ export class CallbacksController {
     @Message() private readonly messageService: MessageService,
     private readonly callbacksService: CallbacksService,
   ) {}
+
+  @Get('callbacks/biteship-order-status')
+  async biteshipCallback() {
+    return 'ok';
+  }
 
   @Post('callbacks/biteship-order-status')
   async biteshipOrderStatus(@Body() data: any) {
