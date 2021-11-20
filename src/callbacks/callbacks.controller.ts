@@ -13,11 +13,6 @@ export class CallbacksController {
     private readonly callbacksService: CallbacksService,
   ) {}
 
-  @Get('callbacks/biteship-order-status')
-  async biteshipCallback() {
-    return 'ok';
-  }
-
   @Post('callbacks/biteship-order-status')
   async biteshipOrderStatus(@Body() data: any) {
     return this.responseService.success(
