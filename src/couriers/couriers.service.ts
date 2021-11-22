@@ -6,17 +6,15 @@ import { Repository } from 'typeorm';
 import { CreateCourierDto } from './dto/create-courier.dto';
 import { FindCourierDto } from './dto/find-courier.dto';
 import { UpdateCourierDto } from './dto/update-courier.dto';
-import { Response } from 'src/response/response.decorator';
 import { ResponseService } from 'src/response/response.service';
 import { MessageService } from 'src/message/message.service';
-import { Message } from 'src/message/message.decorator';
 import { FetchCourierService } from 'src/common/courier/courier.service';
 
 @Injectable()
 export class CouriersService {
   constructor(
-    @Response() private readonly responseService: ResponseService,
-    @Message() private readonly messageService: MessageService,
+    private readonly responseService: ResponseService,
+    private readonly messageService: MessageService,
     @InjectRepository(CourierDocument)
     private readonly courierRepository: Repository<CourierDocument>,
     private readonly fetchCourierService: FetchCourierService,

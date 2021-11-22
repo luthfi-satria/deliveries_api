@@ -1,7 +1,8 @@
-import { HttpService, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AxiosResponse } from 'axios';
 import { catchError, map } from 'rxjs/operators';
 import { lastValueFrom } from 'rxjs';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class CommonService {

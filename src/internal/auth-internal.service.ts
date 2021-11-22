@@ -1,9 +1,9 @@
+import { HttpService } from '@nestjs/axios';
 import {
   Logger,
   HttpStatus,
   BadRequestException,
   NotFoundException,
-  HttpService,
   Injectable,
 } from '@nestjs/common';
 import { firstValueFrom, map, catchError, EMPTY } from 'rxjs';

@@ -1,15 +1,13 @@
-import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { CallbacksService } from './callbacks.service';
-import { Response } from 'src/response/response.decorator';
-import { Message } from 'src/message/message.decorator';
 
 @Controller('api/v1/deliveries')
 export class CallbacksController {
   constructor(
-    @Response() private readonly responseService: ResponseService,
-    @Message() private readonly messageService: MessageService,
+    private readonly responseService: ResponseService,
+    private readonly messageService: MessageService,
     private readonly callbacksService: CallbacksService,
   ) {}
 
