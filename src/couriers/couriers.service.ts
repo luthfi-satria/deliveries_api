@@ -1,22 +1,20 @@
 import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { CourierDocument } from 'src/database/entities/couriers.entity';
 import { dbOutputTime } from 'src/utils/general-utils';
-import { Repository } from 'typeorm';
 import { CreateCourierDto } from './dto/create-courier.dto';
 import { FindCourierDto } from './dto/find-courier.dto';
 import { UpdateCourierDto } from './dto/update-courier.dto';
 import { ResponseService } from 'src/response/response.service';
 import { MessageService } from 'src/message/message.service';
-import { FetchCourierService } from 'src/common/courier/courier.service';
+import { FetchCourierService } from 'src/common/courier/fetch-courier.service';
+import { CourierRepository } from 'src/database/repository/couriers.repository';
 
 @Injectable()
 export class CouriersService {
   constructor(
     private readonly responseService: ResponseService,
     private readonly messageService: MessageService,
-    @InjectRepository(CourierDocument)
-    private readonly courierRepository: Repository<CourierDocument>,
+    private readonly courierRepository: CourierRepository,
     private readonly fetchCourierService: FetchCourierService,
   ) {}
 

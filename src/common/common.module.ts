@@ -3,7 +3,7 @@ import { Global, Module } from '@nestjs/common';
 import { CommonService } from './common.service';
 import { CommonStorageService } from './storage/storage.service';
 import { NotificationService } from './notification/notification.service';
-import { FetchCourierService } from './courier/courier.service';
+import { FetchCourierService } from './courier/fetch-courier.service';
 import { HttpModule } from '@nestjs/axios';
 import { ResponseService } from 'src/response/response.service';
 import { MessageService } from 'src/message/message.service';
