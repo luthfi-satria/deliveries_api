@@ -23,38 +23,6 @@ export class FetchCourierService {
 
   logger = new Logger();
 
-  //   async getMenuByStoreId(id: string, opt: any = {}): Promise<any> {
-  //     try {
-  //       const urlInternal = `${process.env.BASEURL_CATALOGS_SERVICE}/api/v1/internal/menu/${id}`;
-  //       // const url = `${process.env.BASEURL_CATALOGS_SERVICE}/api/v1/catalogs/query/menus/${id}`;
-  //       const options: any = {
-  //         limit: 100,
-  //       };
-  //       if (opt.search) {
-  //         options.search = opt.search;
-  //       }
-  //       return await firstValueFrom(
-  //         this.httpService
-  //           .get(urlInternal, {
-  //             params: options,
-  //           })
-  //           .pipe(map((resp) => resp.data)),
-  //       );
-  //     } catch (e) {
-  //       this.logger.error(
-  //         `${process.env.BASEURL_CATALOGS_SERVICE}/api/v1/catalogs/query/menus/${id}`,
-  //       );
-  //       if (e.response) {
-  //         throw new HttpException(
-  //           e.response.data.message,
-  //           e.response.data.statusCode,
-  //         );
-  //       } else {
-  //         throw new InternalServerErrorException();
-  //       }
-  //     }
-  //   }
-
   async fetchCouriersFromBiteship(): Promise<any> {
     try {
       const headerRequest = {
