@@ -1,6 +1,13 @@
 export default {
   general: {
-    success: 'SUCCESS',
+    success: {
+      code: 'SUCCESS',
+      message: 'Sukses',
+    },
+    fail: {
+      code: 'FAIL',
+      message: 'Gagal',
+    },
     empty_token: 'Kode Token tidak ada.',
     invalid_token: 'Kode Token tidak valid.',
     dataNotFound: {

@@ -8,6 +8,7 @@ import { ResponseService } from 'src/response/response.service';
 import { MessageService } from 'src/message/message.service';
 import { FetchCourierService } from 'src/common/courier/fetch-courier.service';
 import { CourierRepository } from 'src/database/repository/couriers.repository';
+import { RMessage } from 'src/response/response.interface';
 
 @Injectable()
 export class CouriersService {
@@ -23,76 +24,43 @@ export class CouriersService {
   }
 
   async findAll(data: FindCourierDto) {
-    const search = data.search || null;
-    const perPage = data.limit || 10;
-    const currentPage = data.page || 1;
-    const statuses = data.statuses?.length ? data.statuses : null;
-    const originLatitude = data.location_latitude;
-    const originLongitude = data.location_longitude;
-    const destinationLatitude = data.destination_latitude;
-    const destinationLongitude = data.destination_longitude;
-    const isIncludePrice =
-      originLatitude &&
-      originLongitude &&
-      destinationLatitude &&
-      destinationLongitude
-        ? true
-        : false;
+    try {
+      const search = data.search || null;
+      const perPage = data.limit || 10;
+      const currentPage = data.page || 1;
+      const statuses = data.statuses?.length ? data.statuses : null;
+      const originLatitude = data.location_latitude;
+      const originLongitude = data.location_longitude;
+      const destinationLatitude = data.destination_latitude;
+      const destinationLongitude = data.destination_longitude;
+      const isIncludePrice =
+        originLatitude &&
+        originLongitude &&
+        destinationLatitude &&
+        destinationLongitude
+          ? true
+          : false;
 
-    const query = this.courierRepository.createQueryBuilder('couriers');
+      const query = this.courierRepository.createQueryBuilder('couriers');
 
-    if (search) {
-      query.andWhere('couriers.name ilike :search', {
-        search,
-      });
-    }
+      if (search) {
+        query.andWhere('couriers.name ilike :search', {
+          search,
+        });
+      }
 
-    if (statuses) {
-      query.andWhere('couriers.status in (:...statuses)', {
-        statuses,
-      });
-    }
+      if (statuses) {
+        query.andWhere('couriers.status in (:...statuses)', {
+          statuses,
+        });
+      }
 
-    const [items, count] = await query
-      .take(perPage)
-      .skip((currentPage - 1) * perPage)
-      .getManyAndCount()
-      .catch((error) => {
-        console.error(error);
-        throw new BadRequestException(
-          this.responseService.error(
-            HttpStatus.BAD_REQUEST,
-            {
-              value: '',
-              property: '',
-              constraint: [
-                this.messageService.get('delivery.getAllCouriers.fail'),
-                error.message,
-              ],
-            },
-            'Bad Request',
-          ),
-        );
-      });
-
-    let itemsWithInfos: any[] = [];
-    if (isIncludePrice && items.length) {
-      const CourierCodesObj: any = {};
-      const CourierPrices: any = {};
-      items.forEach((courier: any) => {
-        CourierCodesObj[courier.code] = true;
-      });
-
-      const couriersWithPrice: any[] = await this.fetchCourierService
-        .fetchCouriersWithPrice({
-          origin_latitude: originLatitude,
-          origin_longitude: originLongitude,
-          destination_latitude: destinationLatitude,
-          destination_longitude: destinationLongitude,
-          couriers: Object.keys(CourierCodesObj).join(','),
-          items: [],
-        })
-        .catch(() => {
+      const [items, count] = await query
+        .take(perPage)
+        .skip((currentPage - 1) * perPage)
+        .getManyAndCount()
+        .catch((error) => {
+          console.error(error);
           throw new BadRequestException(
             this.responseService.error(
               HttpStatus.BAD_REQUEST,
@@ -100,9 +68,8 @@ export class CouriersService {
                 value: '',
                 property: '',
                 constraint: [
-                  this.messageService.get(
-                    'delivery.getAllCouriers.courierNotFound',
-                  ),
+                  this.messageService.get('delivery.getAllCouriers.fail'),
+                  error.message,
                 ],
               },
               'Bad Request',
@@ -110,96 +77,180 @@ export class CouriersService {
           );
         });
 
-      couriersWithPrice.forEach((courier) => {
-        CourierPrices[courier.courier_code + courier.courier_service_code] =
-          courier.price;
-      });
+      let itemsWithInfos: any[] = [];
+      if (isIncludePrice && items.length) {
+        const CourierCodesObj: any = {};
+        const CourierPrices: any = {};
+        items.forEach((courier: any) => {
+          CourierCodesObj[courier.code] = true;
+        });
 
-      items.forEach((courier: any) => {
-        if (
-          CourierPrices[courier.code + courier.service_code] ||
-          CourierPrices[courier.code + courier.service_code] === 0
-        ) {
-          itemsWithInfos.push({
-            ...courier,
-            ongkir: CourierPrices[courier.code + courier.service_code],
+        const couriersWithPrice: any[] = await this.fetchCourierService
+          .fetchCouriersWithPrice({
+            origin_latitude: originLatitude,
+            origin_longitude: originLongitude,
+            destination_latitude: destinationLatitude,
+            destination_longitude: destinationLongitude,
+            couriers: Object.keys(CourierCodesObj).join(','),
+            items: [],
+          })
+          .catch(() => {
+            throw new BadRequestException(
+              this.responseService.error(
+                HttpStatus.BAD_REQUEST,
+                {
+                  value: '',
+                  property: '',
+                  constraint: [
+                    this.messageService.get(
+                      'delivery.getAllCouriers.courierNotFound',
+                    ),
+                  ],
+                },
+                'Bad Request',
+              ),
+            );
           });
-        }
-      });
-    } else {
-      itemsWithInfos = [...items];
-    }
 
-    return {
-      total_item: count,
-      limit: perPage,
-      current_page: currentPage,
-      items: itemsWithInfos.map((courier: any) => {
-        return dbOutputTime(courier);
-      }),
-    };
+        couriersWithPrice.forEach((courier) => {
+          CourierPrices[courier.courier_code + courier.courier_service_code] =
+            courier.price;
+        });
+
+        items.forEach((courier: any) => {
+          if (
+            CourierPrices[courier.code + courier.service_code] ||
+            CourierPrices[courier.code + courier.service_code] === 0
+          ) {
+            itemsWithInfos.push({
+              ...courier,
+              ongkir: CourierPrices[courier.code + courier.service_code],
+            });
+          }
+        });
+      } else {
+        itemsWithInfos = [...items];
+      }
+
+      return {
+        total_item: count,
+        limit: perPage,
+        current_page: currentPage,
+        items: itemsWithInfos.map((courier: any) => {
+          return dbOutputTime(courier);
+        }),
+      };
+    } catch (error) {
+      console.error(error);
+      if (error.message == 'Bad Request Exception') {
+        throw error;
+      } else {
+        const errors: RMessage = {
+          value: '',
+          property: '',
+          constraint: [
+            this.messageService.get('delivery.general.fail'),
+            error.message,
+          ],
+        };
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            errors,
+            'Bad Request',
+          ),
+        );
+      }
+    }
   }
 
   async findOne(id: string) {
-    if (!id) {
-      throw new BadRequestException(
-        this.responseService.error(
-          HttpStatus.BAD_REQUEST,
-          {
-            value: '',
-            property: 'courier_id',
-            constraint: [
-              this.messageService.get(
-                'delivery.getAllCouriers.courierNotFound',
-              ),
-            ],
-          },
-          'Bad Request',
-        ),
-      );
-    }
-    const item = await this.courierRepository.findOneOrFail(id).catch(() => {
-      throw new BadRequestException(
-        this.responseService.error(
-          HttpStatus.BAD_REQUEST,
-          {
-            value: id,
-            property: 'courier_id',
-            constraint: [
-              this.messageService.get(
-                'delivery.getAllCouriers.courierNotFound',
-              ),
-            ],
-          },
-          'Bad Request',
-        ),
-      );
-    });
-    return { courier: dbOutputTime(item) };
-  }
-
-  async fetch() {
-    const fetchData = await this.fetchCourierService
-      .fetchCouriersFromBiteship()
-      .catch((error) => {
-        console.error(error);
+    try {
+      if (!id) {
         throw new BadRequestException(
           this.responseService.error(
             HttpStatus.BAD_REQUEST,
             {
               value: '',
-              property: '',
+              property: 'courier_id',
               constraint: [
-                this.messageService.get('delivery.fetchCouriers.fail'),
+                this.messageService.get(
+                  'delivery.getAllCouriers.courierNotFound',
+                ),
+              ],
+            },
+            'Bad Request',
+          ),
+        );
+      }
+      const item = await this.courierRepository.findOneOrFail(id).catch(() => {
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            {
+              value: id,
+              property: 'courier_id',
+              constraint: [
+                this.messageService.get(
+                  'delivery.getAllCouriers.courierNotFound',
+                ),
               ],
             },
             'Bad Request',
           ),
         );
       });
+      return { courier: dbOutputTime(item) };
+    } catch (error) {
+      console.error(error);
+      if (error.message == 'Bad Request Exception') {
+        throw error;
+      } else {
+        const errors: RMessage = {
+          value: '',
+          property: '',
+          constraint: [
+            this.messageService.get('delivery.general.fail'),
+            error.message,
+          ],
+        };
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            errors,
+            'Bad Request',
+          ),
+        );
+      }
+    }
+  }
 
-    const couriersToSave: Partial<CourierDocument>[] = fetchData.map(
-      (courier: any) => {
+  async fetch() {
+    try {
+      const fetchData = await this.fetchCourierService
+        .fetchCouriersFromBiteship()
+        .catch((error) => {
+          console.error(error);
+          throw new BadRequestException(
+            this.responseService.error(
+              HttpStatus.BAD_REQUEST,
+              {
+                value: '',
+                property: '',
+                constraint: [
+                  this.messageService.get('delivery.fetchCouriers.fail'),
+                ],
+              },
+              'Bad Request',
+            ),
+          );
+        });
+
+      const courierIndex: any = {};
+
+      const couriersToSave: Partial<CourierDocument>[] = [];
+
+      fetchData.forEach((courier: any) => {
         const save: Partial<CourierDocument> = {
           name: courier.courier_name,
           code: courier.courier_code,
@@ -212,30 +263,67 @@ export class CouriersService {
           duration_range: courier.shipment_duration_range,
           duration_unit: courier.shipment_duration_unit,
         };
-        return save;
-      },
-    );
+        courierIndex[courier.courier_code + courier.courier_service_code] =
+          save;
+      });
 
-    await this.courierRepository
-      .createQueryBuilder('courier')
-      .insert()
-      .into(CourierDocument)
-      .values(couriersToSave)
-      .orUpdate(
-        [
-          'name',
-          'service_name',
-          'tier',
-          'description',
-          'service_type',
-          'shipping_type',
-          'duration_range',
-          'duration_unit',
-        ],
-        ['code', 'service_code'],
-      )
-      .execute();
-    return { status: true };
+      const couriers = await this.courierRepository.find();
+
+      couriers.forEach((courier: any) => {
+        if (!courierIndex[courier.code + courier.service_code]) {
+          couriersToSave.push({ ...courier, deleted_at: new Date() });
+        } else {
+          courierIndex[courier.code + courier.service_code] = {
+            ...courier,
+            ...courierIndex[courier.code + courier.service_code],
+          };
+        }
+      });
+      couriersToSave.push(...Object.values(courierIndex));
+
+      await this.courierRepository
+        .createQueryBuilder('courier')
+        .insert()
+        .into(CourierDocument)
+        .values(couriersToSave)
+        .orUpdate(
+          [
+            'name',
+            'service_name',
+            'tier',
+            'description',
+            'service_type',
+            'shipping_type',
+            'duration_range',
+            'duration_unit',
+            'deleted_at',
+          ],
+          ['id'],
+        )
+        .execute();
+      return { status: true };
+    } catch (error) {
+      console.error(error);
+      if (error.message == 'Bad Request Exception') {
+        throw error;
+      } else {
+        const errors: RMessage = {
+          value: '',
+          property: '',
+          constraint: [
+            this.messageService.get('delivery.general.fail'),
+            error.message,
+          ],
+        };
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            errors,
+            'Bad Request',
+          ),
+        );
+      }
+    }
   }
 
   update(id: number, updateCourierDto: UpdateCourierDto) {
