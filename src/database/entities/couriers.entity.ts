@@ -14,7 +14,6 @@ export enum CourierStatus {
 }
 
 @Entity({ name: 'deliveries_couriers' })
-@Index('code_service_code', ['code', 'service_code'], { unique: true })
 export class CourierDocument {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -61,6 +60,6 @@ export class CourierDocument {
   @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date | string;
 
-  @DeleteDateColumn({ nullable: true })
+  @DeleteDateColumn({ type: 'timestamptz', nullable: true })
   deleted_at: Date;
 }
