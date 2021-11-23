@@ -76,12 +76,37 @@ export default {
     },
   },
   getAllCouriers: {
-    success: 'Sukses mengambil data couriers',
-    fail: 'Gagal mengambil data couriers',
-    courierNotFound: 'Courier id tidak dapat ditemukan',
+    success: {
+      code: 'COURIER_LIST_SUCCESS',
+      message: 'Sukses mengambil data couriers.',
+    },
+    fail: {
+      code: 'COURIER_LIST_FAIL',
+      message: 'Gagal mengambil data couriers.',
+    },
+    courierNotFound: {
+      code: 'COURIER_ID_NOT_FOUND',
+      message: 'Courier id tidak dapat ditemukan.',
+    },
   },
   fetchCouriers: {
-    success: 'Sukses mengupdate couriers dari provider',
-    fail: 'Gagal mengupdate couriers dari provider',
+    success: {
+      code: 'COURIER_FETCH_SUCCESS',
+      message: 'Sukses mengupdate couriers dari provider.',
+    },
+    fail: {
+      code: 'COURIER_FETCH_FAIL',
+      message: 'Gagal mengupdate couriers dari provider.',
+    },
+  },
+  updateCourier: {
+    success: {
+      code: 'COURIER_UPDATE_SUCCESS',
+      message: 'Update courier berhasil.',
+    },
+    fail: {
+      code: 'COURIER_UPDATE_FAIL',
+      message: 'Update courier gagal.',
+    },
   },
 };

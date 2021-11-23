@@ -1,15 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Put } from '@nestjs/common';
 import { CouriersService } from './couriers.service';
-import { CreateCourierDto } from './dto/create-courier.dto';
 import { UpdateCourierDto } from './dto/update-courier.dto';
 import { ResponseStatusCode } from 'src/response/response.decorator';
 import { ResponseService } from 'src/response/response.service';
@@ -25,11 +15,6 @@ export class CouriersController {
     private readonly messageService: MessageService,
     private readonly couriersService: CouriersService,
   ) {}
-
-  @Post()
-  create(@Body() createCourierDto: CreateCourierDto) {
-    return this.couriersService.create(createCourierDto);
-  }
 
   @Get('couriers')
   @ResponseStatusCode()
@@ -63,13 +48,19 @@ export class CouriersController {
     );
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCourierDto: UpdateCourierDto) {
-    return this.couriersService.update(+id, updateCourierDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.couriersService.remove(+id);
+  @Put('couriers/:courier_id')
+  @UserTypeAndLevel('admin.*')
+  @AuthJwtGuard()
+  @ResponseStatusCode()
+  async updateCourier(
+    @Param('courier_id') courierId: string,
+    @Body() updateCourierDto: UpdateCourierDto,
+  ) {
+    updateCourierDto.courierId = courierId;
+    return this.responseService.success(
+      true,
+      this.messageService.get('delivery.updateCourier.success'),
+      await this.couriersService.updateCourier(updateCourierDto),
+    );
   }
 }

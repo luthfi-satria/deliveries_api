@@ -1,7 +1,6 @@
 import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { CourierDocument } from 'src/database/entities/couriers.entity';
 import { dbOutputTime } from 'src/utils/general-utils';
-import { CreateCourierDto } from './dto/create-courier.dto';
 import { FindCourierDto } from './dto/find-courier.dto';
 import { UpdateCourierDto } from './dto/update-courier.dto';
 import { ResponseService } from 'src/response/response.service';
@@ -18,10 +17,6 @@ export class CouriersService {
     private readonly courierRepository: CourierRepository,
     private readonly fetchCourierService: FetchCourierService,
   ) {}
-
-  create(createCourierDto: CreateCourierDto) {
-    return 'This action adds a new courier';
-  }
 
   async findAll(data: FindCourierDto) {
     try {
@@ -326,11 +321,60 @@ export class CouriersService {
     }
   }
 
-  update(id: number, updateCourierDto: UpdateCourierDto) {
-    return `This action updates a #${id} courier`;
-  }
+  async updateCourier(updateCourierDto: UpdateCourierDto): Promise<any> {
+    try {
+      const status = updateCourierDto.status || null;
+      let sequence = updateCourierDto.sequence;
+      if (!sequence && sequence !== 0) {
+        sequence = null;
+      }
 
-  remove(id: number) {
-    return `This action removes a #${id} courier`;
+      const courier = await this.courierRepository
+        .findOneOrFail(updateCourierDto.courierId)
+        .catch(() => {
+          const errors: RMessage = {
+            value: updateCourierDto.courierId,
+            property: 'courierId',
+            constraint: [
+              this.messageService.get('delivery.general.idNotFound'),
+            ],
+          };
+          throw new BadRequestException(
+            this.responseService.error(
+              HttpStatus.BAD_REQUEST,
+              errors,
+              'Bad Request',
+            ),
+          );
+        });
+
+      courier.status = status ? status : courier.status;
+      courier.sequence = sequence !== null ? sequence : courier.sequence;
+
+      const result = await this.courierRepository.save(courier);
+
+      return { courier: result };
+    } catch (error) {
+      console.error(error);
+      if (error.message == 'Bad Request Exception') {
+        throw error;
+      } else {
+        const errors: RMessage = {
+          value: '',
+          property: '',
+          constraint: [
+            this.messageService.get('delivery.general.fail'),
+            error.message,
+          ],
+        };
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            errors,
+            'Bad Request',
+          ),
+        );
+      }
+    }
   }
 }
