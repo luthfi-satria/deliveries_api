@@ -54,5 +54,9 @@ async function bootstrap() {
   });
 
   microservice.listen();
+
+  app.listen(process.env.HTTP_PORT || 4009, () => {
+    logger.log(`Running on ${process.env.HTTP_PORT || 4009}`);
+  });
 }
 bootstrap();
