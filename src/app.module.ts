@@ -10,6 +10,7 @@ import { InternalModule } from './internal/internal.module';
 import { AuthModule } from './auth/auth.module';
 import { CallbacksModule } from './callbacks/callbacks.module';
 import { HttpModule } from '@nestjs/axios';
+import { DeliveriesModule } from './deliveries/deliveries.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { HttpModule } from '@nestjs/axios';
     InternalModule,
     AuthModule,
     CallbacksModule,
+    DeliveriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

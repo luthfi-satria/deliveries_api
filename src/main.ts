@@ -1,8 +1,8 @@
+import { NatsTransportStrategy } from '@alexy4744/nestjs-nats-jetstream-transporter';
 import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { CustomStrategy } from '@nestjs/microservices';
 import { AppModule } from './app.module';
-import { NatsTransportStrategy } from '@alexy4744/nestjs-nats-jetstream-transporter';
 
 const logger = new Logger('main');
 
@@ -53,10 +53,6 @@ async function bootstrap() {
     }),
   });
 
-  await microservice.listen();
-
-  app.listen(process.env.HTTP_PORT || 4009, () => {
-    logger.log(`Running on ${process.env.HTTP_PORT || 4009}`);
-  });
+  microservice.listen();
 }
 bootstrap();
