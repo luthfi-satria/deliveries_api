@@ -44,4 +44,10 @@ export class FindCourierDto {
   @IsOptional()
   @Type(() => Number)
   destination_longitude: number;
+
+  @IsOptional()
+  courier_id: string;
+
+  @IsOptional()
+  courier_codes: string[];
 }
