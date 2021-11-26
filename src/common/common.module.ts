@@ -7,6 +7,14 @@ import { FetchCourierService } from './courier/fetch-courier.service';
 import { HttpModule } from '@nestjs/axios';
 import { ResponseService } from 'src/response/response.service';
 import { MessageService } from 'src/message/message.service';
+import { NatsController } from './nats/nats/nats.controller';
+import { DeliveriesService } from 'src/deliveries/deliveries.service';
+import { CouriersService } from 'src/couriers/couriers.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { CourierRepository } from 'src/database/repository/couriers.repository';
+import { OrdersRepository } from 'src/database/repository/orders.repository';
+import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
+import { NatsService } from './nats/nats/nats.service';
 
 @Global()
 @Module({
@@ -31,6 +39,11 @@ import { MessageService } from 'src/message/message.service';
         },
       },
     }),
+    TypeOrmModule.forFeature([
+      CourierRepository,
+      OrdersRepository,
+      OrderHistoriesRepository,
+    ]),
     HttpModule,
   ],
   providers: [
@@ -40,7 +53,11 @@ import { MessageService } from 'src/message/message.service';
     FetchCourierService,
     ResponseService,
     MessageService,
+    DeliveriesService,
+    CouriersService,
+    NatsService,
   ],
   exports: [CommonStorageService, NotificationService, FetchCourierService],
+  controllers: [NatsController],
 })
 export class CommonModule {}
