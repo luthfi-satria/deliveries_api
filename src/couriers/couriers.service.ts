@@ -35,6 +35,10 @@ export class CouriersService {
         destinationLongitude
           ? true
           : false;
+      const courierId = data.courier_id || null;
+      const courierCodes = data.courier_codes?.length
+        ? data.courier_codes
+        : null;
 
       const query = this.courierRepository.createQueryBuilder('couriers');
 
@@ -48,6 +52,14 @@ export class CouriersService {
         query.andWhere('couriers.status in (:...statuses)', {
           statuses,
         });
+      }
+
+      if (courierId) {
+        query.andWhere('couriers.id = :courierId', { courierId });
+      }
+
+      if (courierCodes) {
+        query.andWhere('courier.code in (:...courierCode)', { courierCodes });
       }
 
       const [items, count] = await query

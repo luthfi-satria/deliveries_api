@@ -21,4 +21,13 @@ export class InternalService {
       throw error;
     }
   }
+
+  async getDeliveryPrice(data: any): Promise<any> {
+    try {
+      return { data: await this.couriersService.findAll(data) };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 }
