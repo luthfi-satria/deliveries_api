@@ -1,5 +1,5 @@
-import delivery from './delivery';
-import callback from './callback';
+import delivery from './delivery_en';
+import callback from './callback_en';
 
 export default {
   delivery,
