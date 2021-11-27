@@ -22,9 +22,7 @@ export class CommonStorageService {
           .getDisk('s3')
           .put(file, fs.readFileSync(`./${file}`));
 
-        const url = this.storage.getDisk('s3').getUrl(file);
-
-        return url;
+        return this.storage.getDisk('s3').getUrl(file);
       } catch (e) {
         console.error(e);
         throw new InternalServerErrorException(e.message);

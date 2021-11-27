@@ -4,25 +4,19 @@ import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 @Injectable()
 export class DatabaseService implements TypeOrmOptionsFactory {
   createTypeOrmOptions(): TypeOrmModuleOptions {
-    const synchronize = process.env.DB_SYNC
-      ? process.env.DB_SYNC == 'false'
-        ? false
-        : true
-      : true;
-    const dropSchema = process.env.DB_DROP_SCHEMA
-      ? process.env.DB_DROP_SCHEMA == 'true'
-        ? true
-        : false
-      : false;
-    const logging = process.env.DB_LOGGING
-      ? process.env.DB_LOGGING == 'true'
-        ? true
-        : false
-      : false;
+    const dbSync = process.env.DB_SYNC == 'false' ? false : true;
+    const synchronize = process.env.DB_SYNC ? dbSync : true;
+
+    const dbDropSchema = process.env.DB_DROP_SCHEMA == 'true' ? true : false;
+    const dropSchema = process.env.DB_DROP_SCHEMA ? dbDropSchema : false;
+
+    const dbLogging = process.env.DB_LOGGING == 'true' ? true : false;
+    const logging = process.env.DB_LOGGING ? dbLogging : false;
+
+    const dbAutoloadEntities =
+      process.env.DB_AUTOLOAD_ENTITIES == 'false' ? false : true;
     const autoLoadEntities = process.env.DB_AUTOLOAD_ENTITIES
-      ? process.env.DB_AUTOLOAD_ENTITIES == 'false'
-        ? false
-        : true
+      ? dbAutoloadEntities
       : true;
     return {
       name: 'default',
