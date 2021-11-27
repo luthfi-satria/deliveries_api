@@ -109,7 +109,12 @@ export class DeliveriesService {
   async saveOrderDelivery(
     data: Partial<OrdersDocument>,
   ): Promise<OrdersDocument> {
-    return this.ordersRepository.save(data);
+    return this.ordersRepository.findOne(
+      (await this.ordersRepository.save(data)).id,
+      {
+        relations: ['histories'],
+      },
+    );
   }
 
   async saveOrderDeliveryHistory(
