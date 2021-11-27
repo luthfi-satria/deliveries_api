@@ -20,15 +20,6 @@ export class CallbacksService {
       });
 
     if (orderDelivery) {
-      orderDelivery.status = data.status;
-      this.deliveriesService.saveOrderDelivery(orderDelivery);
-
-      const orderHistory: Partial<OrderHistoriesDocument> = {
-        order_id: orderDelivery.id,
-        status: data.status,
-      };
-      this.deliveriesService.saveOrderDeliveryHistory(orderHistory);
-
       let eventName = '';
       switch (data.status) {
         case 'picking_up':
@@ -40,9 +31,19 @@ export class CallbacksService {
         default:
           eventName = data.status;
       }
+      const orderHistory: Partial<OrderHistoriesDocument> = {
+        order_id: orderDelivery.id,
+        status: eventName,
+      };
+      await this.deliveriesService.saveOrderDeliveryHistory(orderHistory);
+
+      orderDelivery.status = eventName;
+      const order = await this.deliveriesService.saveOrderDelivery(
+        orderDelivery,
+      );
 
       //broadcast
-      this.natsService.clientEmit(`deliveries.order.${eventName}`, data);
+      this.natsService.clientEmit(`deliveries.order.${eventName}`, order);
       return { status: true };
     } else {
       return { status: false };

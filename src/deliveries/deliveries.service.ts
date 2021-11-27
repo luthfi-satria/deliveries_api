@@ -6,6 +6,7 @@ import { OrderHistoriesDocument } from 'src/database/entities/orders-history.ent
 import { OrdersDocument } from 'src/database/entities/orders.entity';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
+import moment from 'moment';
 
 @Injectable()
 export class DeliveriesService {
@@ -45,6 +46,8 @@ export class DeliveriesService {
         courier_type: 'instant', // courier.courier.service_type,
         courier_insurance: 50000,
         delivery_type: 'now',
+        delivery_date: moment().format('YYYY-MM-DD'),
+        delivery_time: moment().format('HH:mm'),
         order_note: 'Please be carefull',
         metadata: {},
         items: [
@@ -84,12 +87,15 @@ export class DeliveriesService {
         order_id: order.id,
         status: orderDelivery.status,
       };
-      this.orderHistoriesRepository.save(historyData);
+      await this.orderHistoriesRepository.save(historyData);
+      const getOrder = await this.ordersRepository.findOne(order.id, {
+        relations: ['histories'],
+      });
 
       //broadcast
       this.natsService.clientEmit(
         `deliveries.order.${orderDelivery.status}`,
-        orderDelivery,
+        getOrder,
       );
     }
   }

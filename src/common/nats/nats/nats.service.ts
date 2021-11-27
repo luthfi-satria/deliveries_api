@@ -16,6 +16,7 @@ export class NatsService {
 
   async clientEmit(eventName: string, payload: any): Promise<void> {
     this.logger.log(eventName, 'Publish Event');
+    console.log(payload, 'Payload');
     this.client.emit(eventName, payload);
   }
 }
