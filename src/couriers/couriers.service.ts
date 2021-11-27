@@ -392,7 +392,7 @@ export class CouriersService {
 
   async getBulkCouriers(ids: string[]): Promise<any> {
     try {
-      return this.courierRepository.findByIds(ids);
+      return await this.courierRepository.findByIds(ids);
     } catch (error) {
       console.error(error);
       throw error;
