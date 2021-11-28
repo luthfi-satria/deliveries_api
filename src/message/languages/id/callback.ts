@@ -20,7 +20,7 @@ export default {
       message: 'File image kosong.',
     },
     idNotFound: {
-      code: 'INVALID_ID',
+      code: 'ID_NOT_FOUND',
       message: 'ID tidak ditemukan.',
     },
     invalidID: {
