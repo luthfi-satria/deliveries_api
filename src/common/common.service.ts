@@ -20,7 +20,8 @@ export class CommonService {
           return axiosResponse.data;
         }),
         catchError((err) => {
-          throw err;
+          // throw err;
+          throw err.response.data;
         }),
       );
     try {

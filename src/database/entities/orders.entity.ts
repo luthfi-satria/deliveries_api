@@ -33,10 +33,10 @@ export class OrdersDocument {
   @Column()
   order_id: string;
 
-  @Column()
+  @Column({ nullable: true })
   delivery_id: string;
 
-  @Column()
+  @Column({ nullable: true })
   price: number;
 
   @Column({ type: 'json' })
@@ -51,6 +51,15 @@ export class OrdersDocument {
 
   @OneToMany(() => OrderHistoriesDocument, (history) => history.history)
   histories: OrderHistoriesDocument[];
+
+  @Column({ nullable: true })
+  waybill_id: string;
+
+  @Column({ nullable: true })
+  driver_name: string;
+
+  @Column({ nullable: true })
+  driver_phone: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date | string;

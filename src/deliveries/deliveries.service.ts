@@ -22,15 +22,17 @@ export class DeliveriesService {
       const courier = await this.couriersService.findOne(data.courier_id);
       const url = `${process.env.BASEURL_CUSTOMERS_SERVICE}/api/v1/internal/customerS/${data.customer_id}`;
       const customer: any = await this.commonService.getHttp(url);
+      const urlStore = `${process.env.BASEURL_MERCHANTS_SERVICE}/api/v1/internal/merchants/stores/${data.store_id}`;
+      const store: any = await this.commonService.getHttp(urlStore);
       const orderData = {
-        origin_contact_name: courier.courier.name,
-        origin_contact_phone: '081740781720',
-        origin_address: 'Plaza Senayan, Jalan Asia Afrik...',
-        origin_note: 'Deket pintu masuk STC',
-        origin_postal_code: 12440,
+        origin_contact_name: store.name,
+        origin_contact_phone: store.phone,
+        origin_address: store.address,
+        origin_note: '',
+        origin_postal_code: 0,
         origin_coordinate: {
-          latitude: -6.2253114,
-          longitude: 106.7993735,
+          latitude: store.location_latitude,
+          longitude: store.location_longitude,
         },
         destination_contact_name: customer.name,
         destination_contact_phone: customer.phone,
@@ -39,64 +41,76 @@ export class DeliveriesService {
         destination_postal_code: data.address.postal_code,
         destination_note: '',
         destination_coordinate: {
-          latitude: -6.28927, // data.address.location_latitude,
-          longitude: 106.77492000000007, //data.address.location_longitude,
+          latitude: data.address.location_latitude,
+          longitude: data.address.location_longitude,
         },
-        courier_company: 'grab', // courier.courier.name,
-        courier_type: 'instant', // courier.courier.service_type,
-        courier_insurance: 50000,
+        courier_company: courier.courier.code,
+        courier_type: courier.courier.service_code,
+        courier_insurance: 0,
         delivery_type: 'now',
         delivery_date: moment().format('YYYY-MM-DD'),
         delivery_time: moment().format('HH:mm'),
-        order_note: 'Please be carefull',
+        order_note: '',
         metadata: {},
-        items: [
-          {
-            id: '5db7ee67382e185bd6a14608',
-            name: 'Black L',
-            image: '',
-            description: 'White Shirt',
-            value: 165000,
-            quantity: 1,
+        items: [],
+      };
+
+      if (data.cart_payload.length > 0) {
+        for (const cartItem of data.cart_payload) {
+          const item = {
+            id: cartItem.menu.id,
+            name: cartItem.menu.name,
+            image: cartItem.menu.photo,
+            description: cartItem.menu.description,
+            value: cartItem.priceTotal,
+            quantity: cartItem.quantity,
             height: 1,
             length: 1,
-            weight: 1000,
+            weight: 1,
             width: 1,
-          },
-        ],
-      };
+          };
+          orderData.items.push(item);
+        }
+      }
       const urlDelivery = `${process.env.BITESHIP_API_BASEURL}/v1/orders`;
       const headerRequest = {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${process.env.BITESHIP_API_KEY}`,
       };
-      const orderDelivery: any = await this.commonService.postHttp(
-        urlDelivery,
-        orderData,
-        headerRequest,
-      );
-      const deliveryData: Partial<OrdersDocument> = {
-        order_id: data.id,
-        delivery_id: orderDelivery.id,
-        price: orderDelivery.price,
-        response_payload: orderDelivery,
-        status: orderDelivery.status,
-      };
-      const order = await this.ordersRepository.save(deliveryData);
-      const historyData: Partial<OrderHistoriesDocument> = {
-        order_id: order.id,
-        status: orderDelivery.status,
-      };
-      await this.orderHistoriesRepository.save(historyData);
-      const getOrder = await this.ordersRepository.findOne(order.id, {
-        relations: ['histories'],
-      });
+      const orderDelivery: any = await this.commonService
+        .postHttp(urlDelivery, orderData, headerRequest)
+        .catch((err) => {
+          const deliveryData: Partial<OrdersDocument> = {
+            order_id: data.id,
+            response_payload: err,
+          };
+          this.ordersRepository.save(deliveryData);
+          throw err;
+        });
+      if (orderDelivery) {
+        const deliveryData: Partial<OrdersDocument> = {
+          order_id: data.id,
+          delivery_id: orderDelivery.id,
+          price: orderDelivery.price,
+          response_payload: orderDelivery,
+          status: orderDelivery.status,
+        };
+        const order = await this.ordersRepository.save(deliveryData);
+        const historyData: Partial<OrderHistoriesDocument> = {
+          order_id: order.id,
+          status: orderDelivery.status,
+        };
+        await this.orderHistoriesRepository.save(historyData);
+        const getOrder = await this.ordersRepository.findOne(order.id, {
+          relations: ['histories'],
+        });
 
-      //broadcast
-      this.natsService.clientEmit(
-        `deliveries.order.${orderDelivery.status}`,
-        getOrder,
-      );
+        //broadcast
+        this.natsService.clientEmit(
+          `deliveries.order.${orderDelivery.status}`,
+          getOrder,
+        );
+      }
     }
   }
 

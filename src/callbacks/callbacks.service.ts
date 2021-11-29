@@ -21,6 +21,16 @@ export class CallbacksService {
 
     if (orderDelivery) {
       let eventName = '';
+      orderDelivery.waybill_id = data.courier_waybill_id
+        ? data.courier_waybill_id
+        : '';
+      orderDelivery.driver_name = data.courier_driver_name
+        ? data.courier_driver_name
+        : '';
+      orderDelivery.driver_phone = data.courier_driver_phone
+        ? data.courier_driver_phone
+        : '';
+
       switch (data.status) {
         case 'picking_up':
           eventName = 'routed_to_origin';
