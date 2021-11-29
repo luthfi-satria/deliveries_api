@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { CommonService } from 'src/common/common.service';
 import { NatsService } from 'src/common/nats/nats/nats.service';
 import { CouriersService } from 'src/couriers/couriers.service';
@@ -7,6 +7,8 @@ import { OrdersDocument } from 'src/database/entities/orders.entity';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import moment from 'moment';
+import { ResponseService } from 'src/response/response.service';
+import { MessageService } from 'src/message/message.service';
 
 @Injectable()
 export class DeliveriesService {
@@ -16,14 +18,53 @@ export class DeliveriesService {
     private readonly ordersRepository: OrdersRepository,
     private readonly orderHistoriesRepository: OrderHistoriesRepository,
     private readonly natsService: NatsService,
+    private readonly responseService: ResponseService,
   ) {}
   async createOrder(data: any) {
     if (data.delivery_type == 'DELIVERY') {
       const courier = await this.couriersService.findOne(data.courier_id);
+      if (!courier) {
+        const errContaint: any = {
+          value: data.courier_id,
+          property: 'courier_id',
+          constraint: ['Courier Id tidak ditemukan.'],
+        };
+        const deliveryData: Partial<OrdersDocument> = {
+          order_id: data.id,
+          response_payload: errContaint,
+        };
+        this.saveNegativeResultOrder(deliveryData, errContaint);
+      }
+
       const url = `${process.env.BASEURL_CUSTOMERS_SERVICE}/api/v1/internal/customerS/${data.customer_id}`;
       const customer: any = await this.commonService.getHttp(url);
+      if (!customer) {
+        const errContaint: any = {
+          value: data.customer_id,
+          property: 'customer_id',
+          constraint: ['Customer Id tidak ditemukan.'],
+        };
+        const deliveryData: Partial<OrdersDocument> = {
+          order_id: data.id,
+          response_payload: errContaint,
+        };
+        this.saveNegativeResultOrder(deliveryData, errContaint);
+      }
+
       const urlStore = `${process.env.BASEURL_MERCHANTS_SERVICE}/api/v1/internal/merchants/stores/${data.store_id}`;
       const store: any = await this.commonService.getHttp(urlStore);
+      if (!store) {
+        const errContaint: any = {
+          value: data.store_id,
+          property: 'store_id',
+          constraint: ['Store Id tidak ditemukan.'],
+        };
+        const deliveryData: Partial<OrdersDocument> = {
+          order_id: data.id,
+          response_payload: errContaint,
+        };
+        this.saveNegativeResultOrder(deliveryData, errContaint);
+      }
       const orderData = {
         origin_contact_name: store.name,
         origin_contact_phone: store.phone,
@@ -84,8 +125,8 @@ export class DeliveriesService {
             order_id: data.id,
             response_payload: err,
           };
-          this.ordersRepository.save(deliveryData);
-          throw err;
+          this.saveNegativeResultOrder(deliveryData, err);
+          // throw err;
         });
       if (orderDelivery) {
         const deliveryData: Partial<OrdersDocument> = {
@@ -112,6 +153,21 @@ export class DeliveriesService {
         );
       }
     }
+  }
+
+  async saveNegativeResultOrder(
+    deliveryData: Partial<OrdersDocument>,
+    errContaint: any,
+  ) {
+    this.ordersRepository.save(deliveryData);
+
+    throw new BadRequestException(
+      this.responseService.error(
+        HttpStatus.BAD_REQUEST,
+        errContaint,
+        'Bad Request',
+      ),
+    );
   }
 
   async findOrderDeliveryByCriteria(

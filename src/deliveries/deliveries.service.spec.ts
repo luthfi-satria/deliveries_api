@@ -5,6 +5,7 @@ import { NatsService } from 'src/common/nats/nats/nats.service';
 import { CouriersService } from 'src/couriers/couriers.service';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
+import { ResponseService } from 'src/response/response.service';
 import { DeliveriesService } from './deliveries.service';
 
 describe('DeliveriesService', () => {
@@ -32,6 +33,10 @@ describe('DeliveriesService', () => {
         },
         {
           provide: NatsService,
+          useValue: {},
+        },
+        {
+          provide: ResponseService,
           useValue: {},
         },
       ],
