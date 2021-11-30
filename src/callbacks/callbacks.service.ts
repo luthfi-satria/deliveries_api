@@ -31,6 +31,7 @@ export class CallbacksService {
       orderDelivery.driver_phone = data.courier_driver_phone
         ? data.courier_driver_phone
         : '';
+      orderDelivery.tracking_url = data.courier_link ? data.courier_link : null;
 
       switch (data.status) {
         case 'placed':

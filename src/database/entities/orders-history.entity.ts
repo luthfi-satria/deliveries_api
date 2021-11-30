@@ -40,12 +40,11 @@ export class OrderHistoriesDocument {
   @Column()
   order_id: string;
 
-  // @Column({
-  //   type: 'enum',
-  //   enum: OrderHistoriesStatus,
-  //   default: OrderHistoriesStatus.Finding_driver,
-  // })
-  @Column()
+  @Column({
+    type: 'enum',
+    enum: OrderHistoriesStatus,
+    default: OrderHistoriesStatus.Finding_driver,
+  })
   status: string;
 
   @ManyToOne(() => OrdersDocument, (order) => order.histories, { eager: true })

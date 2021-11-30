@@ -48,12 +48,11 @@ export class OrdersDocument {
   @Column({ type: 'json' })
   response_payload: string;
 
-  // @Column({
-  //   type: 'enum',
-  //   enum: OrdersStatus,
-  //   default: OrdersStatus.Finding_driver,
-  // })
-  @Column()
+  @Column({
+    type: 'enum',
+    enum: OrdersStatus,
+    default: OrdersStatus.Finding_driver,
+  })
   status: string;
 
   @OneToMany(() => OrderHistoriesDocument, (history) => history.history)
@@ -74,6 +73,9 @@ export class OrdersDocument {
     default: OrdersServiceStatus.Placed,
   })
   service_status: string;
+
+  @Column({ nullable: true })
+  tracking_url: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date | string;
