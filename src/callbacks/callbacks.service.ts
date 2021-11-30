@@ -21,6 +21,7 @@ export class CallbacksService {
 
     if (orderDelivery) {
       let eventName = '';
+      let status = '';
       orderDelivery.waybill_id = data.courier_waybill_id
         ? data.courier_waybill_id
         : '';
@@ -32,22 +33,48 @@ export class CallbacksService {
         : '';
 
       switch (data.status) {
+        case 'placed':
+        case 'confirmed':
+          eventName = data.status;
+          status = 'FINDING_DRIVER';
+          break;
+        case 'allocated':
+        case 'picked':
+          eventName = data.status;
+          status = 'DRIVER_FOUND';
+          break;
         case 'picking_up':
           eventName = 'routed_to_origin';
+          status = 'DRIVER_FOUND';
           break;
         case 'dropping_off':
           eventName = 'dropped';
+          status = 'DRIVER_FOUND';
           break;
-        default:
+        case 'delivered':
           eventName = data.status;
+          status = 'COMPLETED';
+          break;
+        case 'rejected':
+        case 'on_hold':
+        case 'courier_not_found':
+          eventName = data.status;
+          status = 'DRIVER_NOT_FOUND';
+          break;
+        case 'cancelled':
+          eventName = data.status;
+          status = 'CANCELLED';
+          break;
       }
       const orderHistory: Partial<OrderHistoriesDocument> = {
         order_id: orderDelivery.id,
-        status: eventName,
+        status: status,
+        service_status: data.status,
       };
       await this.deliveriesService.saveOrderDeliveryHistory(orderHistory);
 
-      orderDelivery.status = eventName;
+      orderDelivery.status = status;
+      orderDelivery.service_status = data.status;
       const order = await this.deliveriesService.saveOrderDelivery(
         orderDelivery,
       );

@@ -11,6 +11,14 @@ import {
 import { OrdersDocument } from './orders.entity';
 
 export enum OrderHistoriesStatus {
+  Finding_driver = 'FINDING_DRIVER',
+  Driver_found = 'DRIVER_FOUND',
+  Driver_not_found = 'DRIVER_NOT_FOUND',
+  Completed = 'COMPLETED',
+  Cancelled = 'CANCELLED',
+}
+
+export enum OrderHistoriesServiceStatus {
   Placed = 'placed',
   Confirmed = 'confirmed',
   Allocated = 'allocated',
@@ -22,8 +30,6 @@ export enum OrderHistoriesStatus {
   Cancelled = 'cancelled',
   On_hold = 'on_hold',
   Courier_not_found = 'courier_not_found',
-  Routed_to_origin = 'routed_to_origin',
-  Dropped = 'dropped',
 }
 
 @Entity({ name: 'deliveries_orders_histories' })
@@ -37,13 +43,20 @@ export class OrderHistoriesDocument {
   @Column({
     type: 'enum',
     enum: OrderHistoriesStatus,
-    default: OrderHistoriesStatus.Placed,
+    default: OrderHistoriesStatus.Finding_driver,
   })
   status: string;
 
   @ManyToOne(() => OrdersDocument, (order) => order.histories, { eager: true })
   @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
   history: OrdersDocument;
+
+  @Column({
+    type: 'enum',
+    enum: OrderHistoriesServiceStatus,
+    default: OrderHistoriesServiceStatus.Placed,
+  })
+  service_status: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date | string;

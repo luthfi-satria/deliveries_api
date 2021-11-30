@@ -10,6 +10,14 @@ import {
 import { OrderHistoriesDocument } from './orders-history.entity';
 
 export enum OrdersStatus {
+  Finding_driver = 'FINDING_DRIVER',
+  Driver_found = 'DRIVER_FOUND',
+  Driver_not_found = 'DRIVER_NOT_FOUND',
+  Completed = 'COMPLETED',
+  Cancelled = 'CANCELLED',
+}
+
+export enum OrdersServiceStatus {
   Placed = 'placed',
   Confirmed = 'confirmed',
   Allocated = 'allocated',
@@ -21,8 +29,6 @@ export enum OrdersStatus {
   Cancelled = 'cancelled',
   On_hold = 'on_hold',
   Courier_not_found = 'courier_not_found',
-  Routed_to_origin = 'routed_to_origin',
-  Dropped = 'dropped',
 }
 
 @Entity({ name: 'deliveries_orders' })
@@ -45,7 +51,7 @@ export class OrdersDocument {
   @Column({
     type: 'enum',
     enum: OrdersStatus,
-    default: OrdersStatus.Placed,
+    default: OrdersStatus.Finding_driver,
   })
   status: string;
 
@@ -60,6 +66,13 @@ export class OrdersDocument {
 
   @Column({ nullable: true })
   driver_phone: string;
+
+  @Column({
+    type: 'enum',
+    enum: OrdersServiceStatus,
+    default: OrdersServiceStatus.Placed,
+  })
+  service_status: string;
 
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date | string;

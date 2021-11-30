@@ -1,4 +1,9 @@
-import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { CommonService } from 'src/common/common.service';
 import { NatsService } from 'src/common/nats/nats/nats.service';
 import { CouriersService } from 'src/couriers/couriers.service';
@@ -8,7 +13,6 @@ import { OrderHistoriesRepository } from 'src/database/repository/orders-history
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import moment from 'moment';
 import { ResponseService } from 'src/response/response.service';
-import { MessageService } from 'src/message/message.service';
 
 @Injectable()
 export class DeliveriesService {
@@ -21,6 +25,7 @@ export class DeliveriesService {
     private readonly responseService: ResponseService,
   ) {}
   async createOrder(data: any) {
+    const logger = new Logger();
     if (data.delivery_type == 'DELIVERY') {
       const courier = await this.couriersService.findOne(data.courier_id);
       if (!courier) {
@@ -118,6 +123,7 @@ export class DeliveriesService {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${process.env.BITESHIP_API_KEY}`,
       };
+      logger.log(orderData, 'Payload Biteship');
       const orderDelivery: any = await this.commonService
         .postHttp(urlDelivery, orderData, headerRequest)
         .catch((err) => {
@@ -134,12 +140,14 @@ export class DeliveriesService {
           delivery_id: orderDelivery.id,
           price: orderDelivery.price,
           response_payload: orderDelivery,
-          status: orderDelivery.status,
+          status: 'FINDING_DRIVER',
+          service_status: orderDelivery.status,
         };
         const order = await this.ordersRepository.save(deliveryData);
         const historyData: Partial<OrderHistoriesDocument> = {
           order_id: order.id,
-          status: orderDelivery.status,
+          status: 'FINDING_DRIVER',
+          service_status: orderDelivery.status,
         };
         await this.orderHistoriesRepository.save(historyData);
         const getOrder = await this.ordersRepository.findOne(order.id, {
@@ -155,7 +163,7 @@ export class DeliveriesService {
     }
   }
 
-  async saveNegativeResultOrder(
+  saveNegativeResultOrder(
     deliveryData: Partial<OrdersDocument>,
     errContaint: any,
   ) {
