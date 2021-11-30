@@ -10,11 +10,11 @@ import {
 import { OrderHistoriesDocument } from './orders-history.entity';
 
 export enum OrdersStatus {
-  Finding_driver = 'FINDING_DRIVER',
-  Driver_found = 'DRIVER_FOUND',
-  Driver_not_found = 'DRIVER_NOT_FOUND',
-  Completed = 'COMPLETED',
-  Cancelled = 'CANCELLED',
+  FINDING_DRIVER = 'FINDING_DRIVER',
+  DRIVER_FOUND = 'DRIVER_FOUND',
+  DRIVER_NOT_FOUND = 'DRIVER_NOT_FOUND',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
 }
 
 export enum OrdersServiceStatus {
@@ -48,13 +48,13 @@ export class OrdersDocument {
   @Column({ type: 'json' })
   response_payload: string;
 
-  // @Column({
-  //   type: 'enum',
-  //   enum: OrdersStatus,
-  //   // default: OrdersStatus.Finding_driver,
-  //   nullable: true,
-  // })
-  @Column()
+  @Column({
+    type: 'enum',
+    enum: OrdersStatus,
+    default: OrdersStatus.FINDING_DRIVER,
+    nullable: true,
+  })
+  // @Column()
   status: string;
 
   @OneToMany(() => OrderHistoriesDocument, (history) => history.history)

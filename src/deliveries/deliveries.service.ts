@@ -146,13 +146,13 @@ export class DeliveriesService {
           delivery_id: orderDelivery.id,
           price: orderDelivery.price,
           response_payload: orderDelivery,
-          status: OrdersStatus.Finding_driver,
+          status: OrdersStatus.FINDING_DRIVER,
           service_status: orderDelivery.status,
         };
         const order = await this.ordersRepository.save(deliveryData);
         const historyData: Partial<OrderHistoriesDocument> = {
           order_id: order.id,
-          status: OrderHistoriesStatus.Finding_driver,
+          status: OrderHistoriesStatus.FINDING_DRIVER,
           service_status: orderDelivery.status,
         };
         await this.orderHistoriesRepository.save(historyData);

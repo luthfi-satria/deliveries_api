@@ -11,11 +11,11 @@ import {
 import { OrdersDocument } from './orders.entity';
 
 export enum OrderHistoriesStatus {
-  Finding_driver = 'FINDING_DRIVER',
-  Driver_found = 'DRIVER_FOUND',
-  Driver_not_found = 'DRIVER_NOT_FOUND',
-  Completed = 'COMPLETED',
-  Cancelled = 'CANCELLED',
+  FINDING_DRIVER = 'FINDING_DRIVER',
+  DRIVER_FOUND = 'DRIVER_FOUND',
+  DRIVER_NOT_FOUND = 'DRIVER_NOT_FOUND',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
 }
 
 export enum OrderHistoriesServiceStatus {
@@ -40,13 +40,13 @@ export class OrderHistoriesDocument {
   @Column()
   order_id: string;
 
-  // @Column({
-  //   type: 'enum',
-  //   enum: OrderHistoriesStatus,
-  //   // default: OrderHistoriesStatus.Finding_driver,
-  //   nullable: true,
-  // })
-  @Column()
+  @Column({
+    type: 'enum',
+    enum: OrderHistoriesStatus,
+    default: OrderHistoriesStatus.FINDING_DRIVER,
+    nullable: true,
+  })
+  // @Column()
   status: string;
 
   @ManyToOne(() => OrdersDocument, (order) => order.histories, { eager: true })
