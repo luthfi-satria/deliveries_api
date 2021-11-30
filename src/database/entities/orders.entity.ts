@@ -48,12 +48,12 @@ export class OrdersDocument {
   @Column({ type: 'json' })
   response_payload: string;
 
-  // @Column({
-  //   type: 'enum',
-  //   enum: OrdersStatus,
-  //   default: OrdersStatus.Finding_driver,
-  // })
-  @Column()
+  @Column({
+    type: 'enum',
+    enum: OrdersStatus,
+    // default: OrdersStatus.Finding_driver,
+  })
+  // @Column()
   status: string;
 
   @OneToMany(() => OrderHistoriesDocument, (history) => history.history)

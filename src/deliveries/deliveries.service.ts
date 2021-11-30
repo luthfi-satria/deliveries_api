@@ -7,8 +7,14 @@ import {
 import { CommonService } from 'src/common/common.service';
 import { NatsService } from 'src/common/nats/nats/nats.service';
 import { CouriersService } from 'src/couriers/couriers.service';
-import { OrderHistoriesDocument } from 'src/database/entities/orders-history.entity';
-import { OrdersDocument } from 'src/database/entities/orders.entity';
+import {
+  OrderHistoriesDocument,
+  OrderHistoriesStatus,
+} from 'src/database/entities/orders-history.entity';
+import {
+  OrdersDocument,
+  OrdersStatus,
+} from 'src/database/entities/orders.entity';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import moment from 'moment';
@@ -140,13 +146,13 @@ export class DeliveriesService {
           delivery_id: orderDelivery.id,
           price: orderDelivery.price,
           response_payload: orderDelivery,
-          status: 'FINDING_DRIVER',
+          status: OrdersStatus.Finding_driver,
           service_status: orderDelivery.status,
         };
         const order = await this.ordersRepository.save(deliveryData);
         const historyData: Partial<OrderHistoriesDocument> = {
           order_id: order.id,
-          status: 'FINDING_DRIVER',
+          status: OrderHistoriesStatus.Finding_driver,
           service_status: orderDelivery.status,
         };
         await this.orderHistoriesRepository.save(historyData);
