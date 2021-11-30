@@ -51,7 +51,7 @@ export class OrdersDocument {
   @Column({
     type: 'enum',
     enum: OrdersStatus,
-    // default: OrdersStatus.Finding_driver,
+    default: OrdersStatus.Finding_driver,
     nullable: true,
   })
   status: string;
