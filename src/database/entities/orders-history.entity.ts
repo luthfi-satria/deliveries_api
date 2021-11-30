@@ -43,7 +43,7 @@ export class OrderHistoriesDocument {
   @Column({
     type: 'enum',
     enum: OrderHistoriesStatus,
-    default: OrderHistoriesStatus.Finding_driver,
+    // default: OrderHistoriesStatus.Finding_driver,
     nullable: true,
   })
   status: string;
