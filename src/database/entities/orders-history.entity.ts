@@ -46,7 +46,6 @@ export class OrderHistoriesDocument {
     default: OrderHistoriesStatus.FINDING_DRIVER,
     nullable: true,
   })
-  // @Column()
   status: string;
 
   @ManyToOne(() => OrdersDocument, (order) => order.histories, { eager: true })

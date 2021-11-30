@@ -54,7 +54,6 @@ export class OrdersDocument {
     default: OrdersStatus.FINDING_DRIVER,
     nullable: true,
   })
-  // @Column()
   status: string;
 
   @OneToMany(() => OrderHistoriesDocument, (history) => history.history)
