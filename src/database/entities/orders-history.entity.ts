@@ -44,7 +44,6 @@ export class OrderHistoriesDocument {
     type: 'enum',
     enum: OrderHistoriesStatus,
     default: OrderHistoriesStatus.Finding_driver,
-    nullable: true,
   })
   status: string;
 
