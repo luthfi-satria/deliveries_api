@@ -9,29 +9,34 @@ import { NatsService } from 'src/common/nats/nats/nats.service';
 import { CouriersService } from 'src/couriers/couriers.service';
 import {
   OrderHistoriesDocument,
+  OrderHistoriesServiceStatus,
   OrderHistoriesStatus,
 } from 'src/database/entities/orders-history.entity';
 import {
   OrdersDocument,
+  OrdersServiceStatus,
   OrdersStatus,
 } from 'src/database/entities/orders.entity';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import moment from 'moment';
 import { ResponseService } from 'src/response/response.service';
+import { MessageService } from 'src/message/message.service';
 
 @Injectable()
 export class DeliveriesService {
+  logger = new Logger();
+
   constructor(
     private readonly couriersService: CouriersService,
     private readonly commonService: CommonService,
     private readonly ordersRepository: OrdersRepository,
     private readonly orderHistoriesRepository: OrderHistoriesRepository,
     private readonly natsService: NatsService,
+    private readonly messageService: MessageService,
     private readonly responseService: ResponseService,
   ) {}
   async createOrder(data: any) {
-    const logger = new Logger();
     if (data.delivery_type == 'DELIVERY') {
       const courier = await this.couriersService.findOne(data.courier_id);
       if (!courier) {
@@ -129,7 +134,7 @@ export class DeliveriesService {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${process.env.BITESHIP_API_KEY}`,
       };
-      logger.log(orderData, 'Payload Biteship');
+      this.logger.log(orderData, 'Payload Biteship');
       const orderDelivery: any = await this.commonService
         .postHttp(urlDelivery, orderData, headerRequest)
         .catch((err) => {
@@ -138,7 +143,6 @@ export class DeliveriesService {
             response_payload: err,
           };
           this.saveNegativeResultOrder(deliveryData, err);
-          // throw err;
         });
       if (orderDelivery) {
         const deliveryData: Partial<OrdersDocument> = {
@@ -205,5 +209,62 @@ export class DeliveriesService {
     data: Partial<OrderHistoriesDocument>,
   ): Promise<OrderHistoriesDocument> {
     return this.orderHistoriesRepository.save(data);
+  }
+
+  async cancelOrder(order_id: string): Promise<any> {
+    const orderDelivery = await this.ordersRepository.findOne({
+      where: { order_id: order_id, status: 'FINDING_DRIVER' },
+    });
+    if (!orderDelivery) {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: order_id,
+            property: 'order_id',
+            constraint: [
+              this.messageService.get('delivery.general.idNotFound'),
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+    const urlDelivery = `${process.env.BITESHIP_API_BASEURL}/v1/orders/${orderDelivery.delivery_id}`;
+    const headerRequest = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.BITESHIP_API_KEY}`,
+    };
+    const cancelOrderDelivery: any = await this.commonService
+      .deleteHttp(urlDelivery, headerRequest)
+      .catch((err1) => {
+        console.error(err1);
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            {
+              value: order_id,
+              property: 'order_id',
+              constraint: [err1.error],
+            },
+            'Bad Request',
+          ),
+        );
+      });
+    const orderHistory: Partial<OrderHistoriesDocument> = {
+      order_id: orderDelivery.id,
+      status: OrderHistoriesStatus.CANCELLED,
+      service_status: OrderHistoriesServiceStatus.Cancelled,
+    };
+    await this.orderHistoriesRepository.save(orderHistory);
+
+    orderDelivery.status = OrdersStatus.CANCELLED;
+    orderDelivery.service_status = OrdersServiceStatus.Cancelled;
+    const order = await this.ordersRepository.save(orderDelivery);
+
+    //broadcast
+    this.natsService.clientEmit(`deliveries.order.cancelled`, order);
+
+    return cancelOrderDelivery;
   }
 }

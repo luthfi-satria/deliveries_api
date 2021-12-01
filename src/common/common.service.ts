@@ -47,4 +47,26 @@ export class CommonService {
       return null;
     }
   }
+
+  async deleteHttp(
+    url: string,
+    headers?: Record<string, any>,
+  ): Promise<AxiosResponse<any>> {
+    const post_response = this.httpService
+      .delete(url, { headers: headers })
+      .pipe(
+        map((axiosResponse: AxiosResponse) => {
+          return axiosResponse.data;
+        }),
+        catchError((err) => {
+          throw err.response.data;
+        }),
+      );
+    try {
+      return await lastValueFrom(post_response);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
 }

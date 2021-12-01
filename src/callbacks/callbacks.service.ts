@@ -32,7 +32,7 @@ export class CallbacksService {
         ? data.courier_driver_phone
         : '';
       orderDelivery.tracking_url = data.courier_link ? data.courier_link : null;
-
+      let flagSavePublish = true;
       switch (data.status) {
         case 'placed':
         case 'confirmed':
@@ -63,25 +63,26 @@ export class CallbacksService {
           status = 'DRIVER_NOT_FOUND';
           break;
         case 'cancelled':
-          eventName = data.status;
-          status = 'CANCELLED';
+          flagSavePublish = false;
           break;
       }
-      const orderHistory: Partial<OrderHistoriesDocument> = {
-        order_id: orderDelivery.id,
-        status: status,
-        service_status: data.status,
-      };
-      await this.deliveriesService.saveOrderDeliveryHistory(orderHistory);
+      if (flagSavePublish) {
+        const orderHistory: Partial<OrderHistoriesDocument> = {
+          order_id: orderDelivery.id,
+          status: status,
+          service_status: data.status,
+        };
+        await this.deliveriesService.saveOrderDeliveryHistory(orderHistory);
 
-      orderDelivery.status = status;
-      orderDelivery.service_status = data.status;
-      const order = await this.deliveriesService.saveOrderDelivery(
-        orderDelivery,
-      );
+        orderDelivery.status = status;
+        orderDelivery.service_status = data.status;
+        const order = await this.deliveriesService.saveOrderDelivery(
+          orderDelivery,
+        );
 
-      //broadcast
-      this.natsService.clientEmit(`deliveries.order.${eventName}`, order);
+        //broadcast
+        this.natsService.clientEmit(`deliveries.order.${eventName}`, order);
+      }
       return { status: true };
     } else {
       return { status: false };
