@@ -235,8 +235,11 @@ export class DeliveriesService {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${process.env.BITESHIP_API_KEY}`,
     };
+    const data = {
+      cancellation_reason: 'Permintaan store',
+    };
     const cancelOrderDelivery: any = await this.commonService
-      .deleteHttp(urlDelivery, headerRequest)
+      .deleteHttp(urlDelivery, data, headerRequest)
       .catch((err1) => {
         console.error(err1);
         throw new BadRequestException(

@@ -50,10 +50,11 @@ export class CommonService {
 
   async deleteHttp(
     url: string,
+    data?: any,
     headers?: Record<string, any>,
   ): Promise<AxiosResponse<any>> {
     const post_response = this.httpService
-      .delete(url, { headers: headers })
+      .delete(url, { headers: headers, data: data })
       .pipe(
         map((axiosResponse: AxiosResponse) => {
           return axiosResponse.data;
