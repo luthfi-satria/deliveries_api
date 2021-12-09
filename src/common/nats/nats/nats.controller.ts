@@ -13,4 +13,11 @@ export class NatsController {
     this.logger.log('orders.order.accepted');
     this.deliveriesService.createOrder(data);
   }
+
+  @EventPattern('orders.delivery.reordered')
+  async deliveryReordered(@Payload() data: any) {
+    this.logger.log('orders.delivery.reordered');
+    data.delivery_status = 'DRIVER_NOT_FOUND';
+    this.deliveriesService.createOrder(data);
+  }
 }

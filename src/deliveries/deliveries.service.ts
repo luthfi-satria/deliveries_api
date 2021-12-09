@@ -165,10 +165,14 @@ export class DeliveriesService {
         });
 
         //broadcast
-        this.natsService.clientEmit(
-          `deliveries.order.${orderDelivery.status}`,
-          getOrder,
-        );
+        let eventName = orderDelivery.status;
+        if (
+          data.delivery_status == 'CANCELLED' ||
+          data.delivery_status == 'DRIVER_NOT_FOUND'
+        ) {
+          eventName = 'reordered';
+        }
+        this.natsService.clientEmit(`deliveries.order.${eventName}`, getOrder);
       }
     }
   }
