@@ -57,7 +57,6 @@ export class CallbacksService {
           eventName = data.status;
           status = 'COMPLETED';
           break;
-        case 'on_hold':
         case 'courier_not_found':
           eventName = data.status;
           status = 'DRIVER_NOT_FOUND';
