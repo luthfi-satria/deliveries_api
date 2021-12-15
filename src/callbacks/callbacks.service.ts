@@ -52,11 +52,11 @@ export class CallbacksService {
           eventName = 'dropped';
           status = 'DRIVER_FOUND';
           break;
+        case 'rejected':
         case 'delivered':
           eventName = data.status;
           status = 'COMPLETED';
           break;
-        case 'rejected':
         case 'on_hold':
         case 'courier_not_found':
           eventName = data.status;
