@@ -62,7 +62,8 @@ export class CallbacksService {
           status = 'DRIVER_NOT_FOUND';
           break;
         case 'cancelled':
-          flagSavePublish = false;
+          eventName = data.status;
+          status = 'CANCELLED';
           break;
       }
       if (flagSavePublish) {
