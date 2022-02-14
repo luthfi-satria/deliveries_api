@@ -242,6 +242,9 @@ export class DeliveriesService {
     const data = {
       cancellation_reason: 'Permintaan store',
     };
+    console.log('urlDelivery: ', urlDelivery);
+    console.log('headerRequest: ', headerRequest);
+    console.log('data: ', data);
     const cancelOrderDelivery: any = await this.commonService
       .deleteHttp(urlDelivery, data, headerRequest)
       .catch((err1) => {
@@ -258,6 +261,7 @@ export class DeliveriesService {
           ),
         );
       });
+    console.log('Response cancel order: ', cancelOrderDelivery);
     const orderHistory: Partial<OrderHistoriesDocument> = {
       order_id: orderDelivery.id,
       status: OrderHistoriesStatus.CANCELLED,

@@ -32,7 +32,7 @@ export class CallbacksService {
         ? data.courier_driver_phone
         : '';
       orderDelivery.tracking_url = data.courier_link ? data.courier_link : null;
-      let flagSavePublish = true;
+      const flagSavePublish = true;
       switch (data.status) {
         case 'placed':
         case 'confirmed':
