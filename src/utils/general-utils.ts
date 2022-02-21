@@ -105,7 +105,7 @@ export const createUrl = function (filename: any) {
   if (typeof filename == 'undefined' || filename == null || filename == '') {
     return null;
   } else {
-    return process.env.HTTP_ADDRESS + '/api/v1/merchants/image' + filename;
+    return process.env.BASEURL_API + '/api/v1/merchants/image' + filename;
   }
 };
 
