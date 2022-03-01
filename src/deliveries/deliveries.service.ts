@@ -154,7 +154,7 @@ export class DeliveriesService {
           if (countMenu == data.cart_payload.length) {
             orderData.order_note += `${cartItem.note}`;
           } else {
-            orderData.order_note += `${cartItem.note}\n`;
+            orderData.order_note += `${cartItem.note}|<br>\n`;
           }
         }
         orderData.origin_note = orderData.order_note;
