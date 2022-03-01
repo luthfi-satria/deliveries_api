@@ -151,19 +151,14 @@ export class DeliveriesService {
             orderData.order_note += addon;
           }
           countMenu += 1;
-          if (isDefined(cartItem.menu.description)) {
-            if (countMenu == data.cart_payload.length) {
-              orderData.order_note += `${cartItem.menu.description}`;
-            } else {
-              orderData.order_note += `${cartItem.menu.description}\n`;
-            }
+          if (countMenu == data.cart_payload.length) {
+            orderData.order_note += `${cartItem.note}`;
           } else {
-            if (countMenu != data.cart_payload.length) {
-              orderData.order_note += `\n`;
-            }
+            orderData.order_note += `${cartItem.note}\n`;
           }
         }
         orderData.origin_note = orderData.order_note;
+        orderData.destination_note = orderData.order_note;
       }
 
       const urlDelivery = `${process.env.BITESHIP_API_BASEURL}/v1/orders`;
