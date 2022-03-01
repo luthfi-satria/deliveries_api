@@ -22,6 +22,7 @@ import { OrdersRepository } from 'src/database/repository/orders.repository';
 import moment from 'moment';
 import { ResponseService } from 'src/response/response.service';
 import { MessageService } from 'src/message/message.service';
+import { isDefined } from 'class-validator';
 
 @Injectable()
 export class DeliveriesService {
@@ -66,7 +67,6 @@ export class DeliveriesService {
         };
         this.saveNegativeResultOrder(deliveryData, errContaint);
       }
-
       const urlStore = `${process.env.BASEURL_MERCHANTS_SERVICE}/api/v1/internal/merchants/stores/${data.store_id}`;
       const store: any = await this.commonService.getHttp(urlStore);
       if (!store) {
@@ -81,6 +81,7 @@ export class DeliveriesService {
         };
         this.saveNegativeResultOrder(deliveryData, errContaint);
       }
+      console.log('cart_payload: ', data.cart_payload);
       const orderData = {
         origin_contact_name: store.name,
         origin_contact_phone: store.phone,
@@ -113,6 +114,7 @@ export class DeliveriesService {
       };
 
       if (data.cart_payload.length > 0) {
+        let countMenu = 0;
         for (const cartItem of data.cart_payload) {
           const item = {
             id: cartItem.menu.id,
@@ -127,8 +129,40 @@ export class DeliveriesService {
             width: 1,
           };
           orderData.items.push(item);
+
+          orderData.order_note += `${cartItem.quantity}x ${cartItem.menu.name} `;
+          if (cartItem.variantSelected && cartItem.variantSelected.length > 0) {
+            let variations = '';
+
+            for (const variation of cartItem.variantSelected) {
+              variations += `${cartItem.quantity}x ${variation.name}, `;
+            }
+            variations = `(${variations.substring(0, variations.length - 2)}) `;
+            orderData.order_note += variations;
+          }
+          if (cartItem.addOns && cartItem.addOns.length > 0) {
+            let addon = '';
+            for (const addons of cartItem.addOns) {
+              addon += `${addons.qty}x ${addons.addons.menu.name}, `;
+            }
+            addon = `(${addon.substring(0, addon.length - 2)}) `;
+            orderData.order_note += addon;
+          }
+          countMenu += 1;
+          if (isDefined(cartItem.menu.description)) {
+            if (countMenu == data.cart_payload.length) {
+              orderData.order_note += `${cartItem.menu.description}`;
+            } else {
+              orderData.order_note += `${cartItem.menu.description}\n`;
+            }
+          } else {
+            if (countMenu != data.cart_payload.length) {
+              orderData.order_note += `\n`;
+            }
+          }
         }
       }
+
       const urlDelivery = `${process.env.BITESHIP_API_BASEURL}/v1/orders`;
       const headerRequest = {
         'Content-Type': 'application/json',
