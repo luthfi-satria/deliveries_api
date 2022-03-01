@@ -152,9 +152,9 @@ export class DeliveriesService {
           }
           countMenu += 1;
           if (countMenu == data.cart_payload.length) {
-            orderData.order_note += `${cartItem.note}`;
+            orderData.order_note += `Note: ${cartItem.note}. `;
           } else {
-            orderData.order_note += `${cartItem.note}|<br>\n`;
+            orderData.order_note += `Note: ${cartItem.note}.\n `;
           }
         }
         orderData.origin_note = orderData.order_note;
