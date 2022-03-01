@@ -143,7 +143,9 @@ export class DeliveriesService {
           if (cartItem.addOns && cartItem.addOns.length > 0) {
             let addon = '';
             for (const addons of cartItem.addOns) {
-              addon += `${addons.qty}x ${addons.addons.menu.name}, `;
+              addon += `${addons.qty * cartItem.quantity}x ${
+                addons.addons.menu.name
+              }, `;
             }
             addon = `(${addon.substring(0, addon.length - 2)}) `;
             orderData.order_note += addon;
@@ -161,6 +163,7 @@ export class DeliveriesService {
             }
           }
         }
+        orderData.origin_note = orderData.order_note;
       }
 
       const urlDelivery = `${process.env.BITESHIP_API_BASEURL}/v1/orders`;
