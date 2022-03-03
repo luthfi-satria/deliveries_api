@@ -11,7 +11,6 @@ export class NatsController {
   @EventPattern('orders.order.accepted')
   async saveMenuEfood(@Payload() data: any) {
     this.logger.log('orders.order.accepted');
-    console.log('data: ', data);
     this.deliveriesService.createOrder(data);
   }
 
