@@ -22,7 +22,6 @@ import { OrdersRepository } from 'src/database/repository/orders.repository';
 import moment from 'moment';
 import { ResponseService } from 'src/response/response.service';
 import { MessageService } from 'src/message/message.service';
-import { isDefined } from 'class-validator';
 
 @Injectable()
 export class DeliveriesService {
@@ -95,7 +94,7 @@ export class DeliveriesService {
         destination_contact_name: customer.name,
         destination_contact_phone: customer.phone,
         destination_contact_email: customer.email,
-        destination_address: data.address.address,
+        destination_address: `${data.address.address}\n ${data.address.address_detail}`,
         destination_postal_code: data.address.postal_code,
         destination_note: '',
         destination_coordinate: {
@@ -157,8 +156,6 @@ export class DeliveriesService {
             orderData.order_note += `Note: ${cartItem.note}.\n `;
           }
         }
-        orderData.origin_note = orderData.order_note;
-        orderData.destination_note = orderData.order_note;
       }
 
       const urlDelivery = `${process.env.BITESHIP_API_BASEURL}/v1/orders`;
