@@ -93,7 +93,7 @@ export class DeliveriesService {
         destination_contact_name: customer.name,
         destination_contact_phone: customer.phone,
         destination_contact_email: customer.email,
-        destination_address: `${data.address.address}\n ${data.address.address_detail}`,
+        destination_address: `${data.address.address}\n (${data.address.address_detail})`,
         destination_postal_code: data.address.postal_code,
         destination_note: '',
         destination_coordinate: {
