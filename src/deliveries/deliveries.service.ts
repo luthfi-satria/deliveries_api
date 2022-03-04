@@ -106,7 +106,7 @@ export class DeliveriesService {
         delivery_type: 'now',
         delivery_date: moment().format('YYYY-MM-DD'),
         delivery_time: moment().format('HH:mm'),
-        order_note: '',
+        order_note: `No. order: ${data.no},\n `,
         metadata: {},
         items: [],
       };
@@ -128,7 +128,6 @@ export class DeliveriesService {
           };
           orderData.items.push(item);
 
-          orderData.order_note += `No. order: ${cartItem.no}\n `;
           orderData.order_note += `${cartItem.quantity}x ${cartItem.menu.name} `;
           if (cartItem.variantSelected && cartItem.variantSelected.length > 0) {
             let variations = '';
