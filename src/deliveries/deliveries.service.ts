@@ -128,6 +128,7 @@ export class DeliveriesService {
           };
           orderData.items.push(item);
 
+          orderData.order_note += `No. order: \n`;
           orderData.order_note += `${cartItem.quantity}x ${cartItem.menu.name} `;
           if (cartItem.variantSelected && cartItem.variantSelected.length > 0) {
             let variations = '';
