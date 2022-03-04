@@ -106,7 +106,7 @@ export class DeliveriesService {
         delivery_type: 'now',
         delivery_date: moment().format('YYYY-MM-DD'),
         delivery_time: moment().format('HH:mm'),
-        order_note: `No. order: ${data.no},\n `,
+        order_note: `No. order: ${data.no}\n `,
         metadata: {},
         items: [],
       };
@@ -156,6 +156,7 @@ export class DeliveriesService {
           }
         }
       }
+      orderData.origin_note = orderData.order_note;
 
       const urlDelivery = `${process.env.BITESHIP_API_BASEURL}/v1/orders`;
       const headerRequest = {
