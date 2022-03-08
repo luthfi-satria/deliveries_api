@@ -169,9 +169,13 @@ export class DeliveriesService {
         .catch((err) => {
           const deliveryData: Partial<OrdersDocument> = {
             order_id: data.id,
+            status: OrdersStatus.DRIVER_NOT_FOUND,
             response_payload: err,
           };
           this.saveNegativeResultOrder(deliveryData, err);
+
+          //broadcast
+          this.natsService.clientEmit(`deliveries.order.failed`, deliveryData);
         });
       if (orderDelivery) {
         const deliveryData: Partial<OrdersDocument> = {
