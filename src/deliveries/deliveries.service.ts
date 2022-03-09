@@ -172,11 +172,13 @@ export class DeliveriesService {
             status: OrdersStatus.DRIVER_NOT_FOUND,
             response_payload: err,
           };
-          this.saveNegativeResultOrder(deliveryData, err);
 
           //broadcast
           this.natsService.clientEmit(`deliveries.order.failed`, deliveryData);
+
+          this.saveNegativeResultOrder(deliveryData, err);
         });
+
       if (orderDelivery) {
         const deliveryData: Partial<OrdersDocument> = {
           order_id: data.id,
@@ -206,6 +208,17 @@ export class DeliveriesService {
           eventName = 'reordered';
         }
         this.natsService.clientEmit(`deliveries.order.${eventName}`, getOrder);
+      } else {
+        const deliveryData: Partial<OrdersDocument> = {
+          order_id: data.id,
+          status: OrdersStatus.DRIVER_NOT_FOUND,
+          response_payload: 'null',
+        };
+
+        //broadcast
+        this.natsService.clientEmit(`deliveries.order.failed`, deliveryData);
+
+        this.saveNegativeResultOrder(deliveryData, 'null');
       }
     }
   }
