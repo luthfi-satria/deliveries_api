@@ -253,6 +253,14 @@ export class CouriersService {
           );
         });
 
+      let maxSeq = 0;
+      const maxSeqOrder = await this.courierRepository.findOne({
+        order: { sequence: 'DESC' },
+      });
+      if (maxSeqOrder && maxSeqOrder.sequence >= 0) {
+        maxSeq = maxSeqOrder.sequence;
+      }
+
       const courierIndex: any = {};
 
       const couriersToSave: Partial<CourierDocument>[] = [];
@@ -286,7 +294,14 @@ export class CouriersService {
           };
         }
       });
+
       couriersToSave.push(...Object.values(courierIndex));
+      couriersToSave?.forEach((item) => {
+        if (!item.id) {
+          maxSeq++;
+          item.sequence = maxSeq;
+        }
+      });
 
       await this.courierRepository
         .createQueryBuilder('courier')

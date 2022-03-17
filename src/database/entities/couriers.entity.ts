@@ -47,7 +47,11 @@ export class CourierDocument {
   @Column()
   duration_unit: string;
 
-  @Column({ type: 'enum', enum: CourierStatus, default: CourierStatus.ACTIVE })
+  @Column({
+    type: 'enum',
+    enum: CourierStatus,
+    default: CourierStatus.INACTIVE,
+  })
   status: string;
 
   @Column({ default: 0, nullable: true })

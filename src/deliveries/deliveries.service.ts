@@ -66,7 +66,6 @@ export class DeliveriesService {
         };
         this.saveNegativeResultOrder(deliveryData, errContaint);
       }
-
       const urlStore = `${process.env.BASEURL_MERCHANTS_SERVICE}/api/v1/internal/merchants/stores/${data.store_id}`;
       const store: any = await this.commonService.getHttp(urlStore);
       if (!store) {
@@ -94,9 +93,9 @@ export class DeliveriesService {
         destination_contact_name: customer.name,
         destination_contact_phone: customer.phone,
         destination_contact_email: customer.email,
-        destination_address: data.address.address,
+        destination_address: `${data.address.address}`,
         destination_postal_code: data.address.postal_code,
-        destination_note: '',
+        destination_note: `${data.address.address_detail}`,
         destination_coordinate: {
           latitude: data.address.location_latitude,
           longitude: data.address.location_longitude,
@@ -107,12 +106,13 @@ export class DeliveriesService {
         delivery_type: 'now',
         delivery_date: moment().format('YYYY-MM-DD'),
         delivery_time: moment().format('HH:mm'),
-        order_note: '',
+        order_note: `No. order: ${data.no}\n `,
         metadata: {},
         items: [],
       };
 
       if (data.cart_payload.length > 0) {
+        let countMenu = 0;
         for (const cartItem of data.cart_payload) {
           const item = {
             id: cartItem.menu.id,
@@ -127,8 +127,37 @@ export class DeliveriesService {
             width: 1,
           };
           orderData.items.push(item);
+
+          orderData.order_note += `${cartItem.quantity}x ${cartItem.menu.name} `;
+          if (cartItem.variantSelected && cartItem.variantSelected.length > 0) {
+            let variations = '';
+
+            for (const variation of cartItem.variantSelected) {
+              variations += `${cartItem.quantity}x ${variation.name}, `;
+            }
+            variations = `(${variations.substring(0, variations.length - 2)}) `;
+            orderData.order_note += variations;
+          }
+          if (cartItem.addOns && cartItem.addOns.length > 0) {
+            let addon = '';
+            for (const addons of cartItem.addOns) {
+              addon += `${addons.qty * cartItem.quantity}x ${
+                addons.addons.menu.name
+              }, `;
+            }
+            addon = `(${addon.substring(0, addon.length - 2)}) `;
+            orderData.order_note += addon;
+          }
+          countMenu += 1;
+          if (countMenu == data.cart_payload.length) {
+            orderData.order_note += `Note: ${cartItem.note}. `;
+          } else {
+            orderData.order_note += `Note: ${cartItem.note}.\n `;
+          }
         }
       }
+      orderData.origin_note = orderData.order_note;
+
       const urlDelivery = `${process.env.BITESHIP_API_BASEURL}/v1/orders`;
       const headerRequest = {
         'Content-Type': 'application/json',
@@ -140,10 +169,16 @@ export class DeliveriesService {
         .catch((err) => {
           const deliveryData: Partial<OrdersDocument> = {
             order_id: data.id,
+            status: OrdersStatus.DRIVER_NOT_FOUND,
             response_payload: err,
           };
+
+          //broadcast
+          this.natsService.clientEmit(`deliveries.order.failed`, deliveryData);
+
           this.saveNegativeResultOrder(deliveryData, err);
         });
+
       if (orderDelivery) {
         const deliveryData: Partial<OrdersDocument> = {
           order_id: data.id,
@@ -173,6 +208,17 @@ export class DeliveriesService {
           eventName = 'reordered';
         }
         this.natsService.clientEmit(`deliveries.order.${eventName}`, getOrder);
+      } else {
+        const deliveryData: Partial<OrdersDocument> = {
+          order_id: data.id,
+          status: OrdersStatus.DRIVER_NOT_FOUND,
+          response_payload: 'null',
+        };
+
+        //broadcast
+        this.natsService.clientEmit(`deliveries.order.failed`, deliveryData);
+
+        this.saveNegativeResultOrder(deliveryData, 'null');
       }
     }
   }
@@ -242,9 +288,6 @@ export class DeliveriesService {
     const data = {
       cancellation_reason: 'Permintaan store',
     };
-    console.log('urlDelivery: ', urlDelivery);
-    console.log('headerRequest: ', headerRequest);
-    console.log('data: ', data);
     const cancelOrderDelivery: any = await this.commonService
       .deleteHttp(urlDelivery, data, headerRequest)
       .catch((err1) => {
@@ -261,7 +304,7 @@ export class DeliveriesService {
           ),
         );
       });
-    console.log('Response cancel order: ', cancelOrderDelivery);
+
     const orderHistory: Partial<OrderHistoriesDocument> = {
       order_id: orderDelivery.id,
       status: OrderHistoriesStatus.CANCELLED,
