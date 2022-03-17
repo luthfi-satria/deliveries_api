@@ -1,16 +1,18 @@
+import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { DatabaseService } from './database/database.service';
-import { CouriersModule } from './couriers/couriers.module';
-import { CommonModule } from './common/common.module';
-import { InternalModule } from './internal/internal.module';
 import { AuthModule } from './auth/auth.module';
 import { CallbacksModule } from './callbacks/callbacks.module';
-import { HttpModule } from '@nestjs/axios';
+import { CommonModule } from './common/common.module';
+import { CouriersModule } from './couriers/couriers.module';
+import { DatabaseService } from './database/database.service';
+import { SeederModule } from './database/seeders/seeder.module';
 import { DeliveriesModule } from './deliveries/deliveries.module';
+import { InternalModule } from './internal/internal.module';
+import { SettingModule } from './setting/setting.module';
 
 @Module({
   imports: [
@@ -25,6 +27,8 @@ import { DeliveriesModule } from './deliveries/deliveries.module';
     AuthModule,
     CallbacksModule,
     DeliveriesModule,
+    SettingModule,
+    SeederModule,
   ],
   controllers: [AppController],
   providers: [AppService],
