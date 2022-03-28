@@ -15,6 +15,11 @@ import { CourierRepository } from 'src/database/repository/couriers.repository';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
 import { NatsService } from './nats/nats/nats.service';
+import { BullModule } from '@nestjs/bull';
+import { RedisDeliveryService } from './redis/redis-delivery.service';
+import { RedisDeliveryProcessor } from './redis/redis-delivery.processor';
+import { SettingService } from 'src/setting/setting.service';
+import { SettingsRepository } from 'src/database/repository/settings.repository';
 
 @Global()
 @Module({
@@ -43,8 +48,12 @@ import { NatsService } from './nats/nats/nats.service';
       CourierRepository,
       OrdersRepository,
       OrderHistoriesRepository,
+      SettingsRepository,
     ]),
     HttpModule,
+    BullModule.registerQueue({
+      name: 'deliveries',
+    }),
   ],
   providers: [
     CommonStorageService,
@@ -53,7 +62,10 @@ import { NatsService } from './nats/nats/nats.service';
     FetchCourierService,
     ResponseService,
     MessageService,
+    SettingService,
     DeliveriesService,
+    RedisDeliveryService,
+    RedisDeliveryProcessor,
     CouriersService,
     NatsService,
   ],

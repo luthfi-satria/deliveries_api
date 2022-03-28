@@ -1,6 +1,9 @@
+import { CouriersService } from 'src/couriers/couriers.service';
 import {
   BadRequestException,
+  forwardRef,
   HttpStatus,
+  Inject,
   Injectable,
   Logger,
   NotFoundException,
@@ -19,6 +22,8 @@ export class SettingService {
     private readonly messageService: MessageService,
     private readonly responseService: ResponseService,
     private readonly settingsRepository: SettingsRepository,
+    @Inject(forwardRef(() => CouriersService))
+    private readonly couriersService: CouriersService,
   ) {}
 
   async updateSetting(data: any) {
@@ -64,6 +69,7 @@ export class SettingService {
     });
 
     const result = await this.settingsRepository.save(settings);
+    await this.couriersService.createAutoSync();
     return result;
   }
 

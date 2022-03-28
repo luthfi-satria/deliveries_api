@@ -10,6 +10,26 @@ export function CreateRandomNumber(pjg: number): string {
   return random_number.substring(random_number.length - 6);
 }
 
+export const cronGen = (
+  minute: string,
+  hour: string,
+  dayOfMonth: string,
+  month: string,
+  dayOfWeek: string,
+): string => {
+  minute = minute || null;
+  hour = hour || null;
+  dayOfMonth = dayOfMonth || null;
+  month = month || null;
+  dayOfWeek = dayOfWeek || null;
+
+  if (!minute || !hour || !dayOfMonth || !month || !dayOfWeek) {
+    return null;
+  }
+
+  return `${minute} ${hour} ${dayOfMonth} ${month} ${dayOfWeek}`;
+};
+
 export const editFileName = (req: any, file: any, callback: any) => {
   const random_number = parseInt('0.' + randomBytes(8).toString('hex'), 16);
   const name = file.originalname.split('.')[0];
