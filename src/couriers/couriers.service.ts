@@ -1,6 +1,13 @@
-import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
+import { RedisDeliveryService } from './../common/redis/redis-delivery.service';
+import {
+  BadRequestException,
+  forwardRef,
+  HttpStatus,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { CourierDocument } from 'src/database/entities/couriers.entity';
-import { dbOutputTime } from 'src/utils/general-utils';
+import { cronGen, dbOutputTime } from 'src/utils/general-utils';
 import { FindCourierDto } from './dto/find-courier.dto';
 import { UpdateCourierDto } from './dto/update-courier.dto';
 import { ResponseService } from 'src/response/response.service';
@@ -8,6 +15,9 @@ import { MessageService } from 'src/message/message.service';
 import { FetchCourierService } from 'src/common/courier/fetch-courier.service';
 import { CourierRepository } from 'src/database/repository/couriers.repository';
 import { RMessage } from 'src/response/response.interface';
+import { SettingService } from 'src/setting/setting.service';
+import { CreateAutoSyncDeliveryDto } from 'src/common/redis/dto/redis-delivery.dto';
+import { SettingsDocument } from 'src/database/entities/settings.entity';
 
 @Injectable()
 export class CouriersService {
@@ -16,7 +26,10 @@ export class CouriersService {
     private readonly messageService: MessageService,
     private readonly courierRepository: CourierRepository,
     private readonly fetchCourierService: FetchCourierService,
-  ) { }
+    @Inject(forwardRef(() => SettingService))
+    private readonly settingService: SettingService,
+    private readonly redisDeliveryService: RedisDeliveryService,
+  ) {}
 
   async findAll(data: FindCourierDto) {
     try {
@@ -348,6 +361,79 @@ export class CouriersService {
         );
       }
     }
+  }
+
+  async createAutoSync() {
+    const settings = await this.settingService.getSetting();
+
+    const crons = this.generateCronsFromSettings(settings);
+    const jobId = 'autoSyncCourier';
+
+    //=> clear the cron jobs first
+    await this.redisDeliveryService.clearAutoSyncCourierJobs({
+      job_id: jobId,
+    });
+
+    //=> then create new jobs
+    for (const cron of crons) {
+      const payload: CreateAutoSyncDeliveryDto = {
+        job_id: jobId,
+        repeat: {
+          cron,
+          tz: 'Asia/Jakarta',
+        },
+      };
+      await this.redisDeliveryService.createAutoSyncCourierJob(payload);
+    }
+  }
+
+  generateCronsFromSettings(settings): string[] {
+    let automaticSyncTime = null;
+    const automaticDisburseMinute = {};
+    const crons = [];
+    console.log(settings);
+
+    if (settings) {
+      automaticSyncTime = settings.sync_time_couriers;
+    }
+    // for (const setting of settings) {
+    //   switch (setting.name) {
+    //     case 'sync_time_couriers':
+    //       automaticSyncTime = setting.value;
+    //       break;
+    //   }
+    // }
+
+    console.log(automaticSyncTime);
+
+    //=> cek multiple minute patterns
+    if (automaticSyncTime && automaticSyncTime?.length) {
+      for (const time of automaticSyncTime) {
+        const [hour, minute] = time.split(':');
+        if (automaticDisburseMinute[minute]) {
+          automaticDisburseMinute[minute].push(hour);
+        } else {
+          automaticDisburseMinute[minute] = [hour];
+        }
+      }
+    }
+
+    for (const minute in automaticDisburseMinute) {
+      if (
+        Object.prototype.hasOwnProperty.call(automaticDisburseMinute, minute)
+      ) {
+        const hours: string[] = automaticDisburseMinute[minute];
+        const hoursString = hours.toString();
+
+        const cron = cronGen(minute, hoursString, '*', '*', '*');
+
+        if (cron) {
+          crons.push(cron);
+        }
+      }
+    }
+
+    return crons;
   }
 
   async updateCourier(updateCourierDto: UpdateCourierDto): Promise<any> {

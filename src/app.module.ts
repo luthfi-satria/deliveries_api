@@ -1,4 +1,5 @@
 import { HttpModule } from '@nestjs/axios';
+import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -19,6 +20,13 @@ import { SettingModule } from './setting/setting.module';
     ConfigModule.forRoot(),
     TypeOrmModule.forRootAsync({
       useClass: DatabaseService,
+    }),
+    BullModule.forRoot({
+      redis: {
+        host: process.env.REDIS_HOST,
+        port: +process.env.REDIS_PORT,
+        password: process.env.REDIS_PASSWORD,
+      },
     }),
     CouriersModule,
     HttpModule,
