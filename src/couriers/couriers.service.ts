@@ -43,9 +43,9 @@ export class CouriersService {
       const destinationLongitude = data.destination_longitude;
       const isIncludePrice =
         originLatitude &&
-        originLongitude &&
-        destinationLatitude &&
-        destinationLongitude
+          originLongitude &&
+          destinationLatitude &&
+          destinationLongitude
           ? true
           : false;
       const courierId = data.courier_id || null;
@@ -76,6 +76,8 @@ export class CouriersService {
       }
 
       const [items, count] = await query
+        .orderBy('couriers.status', 'ASC')
+        .addOrderBy('couriers.name', 'ASC')
         .take(perPage)
         .skip((currentPage - 1) * perPage)
         .getManyAndCount()
