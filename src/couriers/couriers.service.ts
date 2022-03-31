@@ -16,7 +16,7 @@ export class CouriersService {
     private readonly messageService: MessageService,
     private readonly courierRepository: CourierRepository,
     private readonly fetchCourierService: FetchCourierService,
-  ) {}
+  ) { }
 
   async findAll(data: FindCourierDto) {
     try {
@@ -30,9 +30,9 @@ export class CouriersService {
       const destinationLongitude = data.destination_longitude;
       const isIncludePrice =
         originLatitude &&
-        originLongitude &&
-        destinationLatitude &&
-        destinationLongitude
+          originLongitude &&
+          destinationLatitude &&
+          destinationLongitude
           ? true
           : false;
       const courierId = data.courier_id || null;
@@ -63,6 +63,8 @@ export class CouriersService {
       }
 
       const [items, count] = await query
+        .orderBy('couriers.status', 'ASC')
+        .addOrderBy('couriers.name', 'ASC')
         .take(perPage)
         .skip((currentPage - 1) * perPage)
         .getManyAndCount()
