@@ -29,7 +29,7 @@ export class CouriersService {
     @Inject(forwardRef(() => SettingService))
     private readonly settingService: SettingService,
     private readonly redisDeliveryService: RedisDeliveryService,
-  ) {}
+  ) { }
 
   async findAll(data: FindCourierDto) {
     try {
@@ -57,10 +57,10 @@ export class CouriersService {
 
       if (search) {
         query.andWhere('couriers.name ilike :search', {
-          search,
+          search: `%${search}%`,
         });
         query.orWhere('couriers.service_name ilike :search', {
-          search,
+          search: `%${search}%`,
         })
       }
 
