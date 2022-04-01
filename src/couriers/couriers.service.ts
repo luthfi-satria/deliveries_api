@@ -46,6 +46,9 @@ export class CouriersService {
         query.andWhere('couriers.name ilike :search', {
           search,
         });
+        query.orWhere('couriers.service_name ilike :search', {
+          search,
+        })
       }
 
       if (statuses) {
