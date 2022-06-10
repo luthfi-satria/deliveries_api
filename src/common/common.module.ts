@@ -20,6 +20,7 @@ import { RedisDeliveryService } from './redis/redis-delivery.service';
 import { RedisDeliveryProcessor } from './redis/redis-delivery.processor';
 import { SettingService } from 'src/setting/setting.service';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
+import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 
 @Global()
 @Module({
@@ -46,6 +47,7 @@ import { SettingsRepository } from 'src/database/repository/settings.repository'
     }),
     TypeOrmModule.forFeature([
       CourierRepository,
+      ThirdPartyRequestsRepository,
       OrdersRepository,
       OrderHistoriesRepository,
       SettingsRepository,

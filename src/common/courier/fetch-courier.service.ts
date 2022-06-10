@@ -1,3 +1,4 @@
+import { ThirdPartyRequestsRepository } from './../../database/repository/third-party-request.repository';
 import { HttpService } from '@nestjs/axios';
 import {
   HttpException,
@@ -19,6 +20,7 @@ export class FetchCourierService {
     private readonly commonService: CommonService,
     private readonly responseService: ResponseService,
     private readonly messageService: MessageService,
+    private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
   ) {}
 
   logger = new Logger();
@@ -42,6 +44,9 @@ export class FetchCourierService {
         object: string;
         couriers: any[];
       } = await firstValueFrom(get_request);
+
+      const request = { header: headerRequest, url };
+      this.thirdPartyRequestsRepository.save({ request, response });
 
       return response.couriers;
     } catch (e) {
@@ -72,6 +77,8 @@ export class FetchCourierService {
           }),
         );
       const response = await firstValueFrom(get_request);
+      const request = { header: headerRequest, url };
+      this.thirdPartyRequestsRepository.save({ request, response });
 
       return response.pricing;
     } catch (e) {

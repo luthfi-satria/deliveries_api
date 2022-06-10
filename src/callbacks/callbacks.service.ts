@@ -1,3 +1,5 @@
+import { ThirdPartyCallbacksRepository } from './../database/repository/third-party-callback.repository';
+import { ThirdPartyRequestsRepository } from './../database/repository/third-party-request.repository';
 import { Injectable } from '@nestjs/common';
 import { NatsService } from 'src/common/nats/nats/nats.service';
 import { OrderHistoriesDocument } from 'src/database/entities/orders-history.entity';
@@ -8,11 +10,25 @@ export class CallbacksService {
   constructor(
     private readonly deliveriesService: DeliveriesService,
     private readonly natsService: NatsService,
+    private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
+    private readonly thirdPartyCallbacksRepository: ThirdPartyCallbacksRepository,
   ) {}
 
   async biteshipOrderStatus(data: any) {
     console.log(typeof data, '<<===== TYPEOF DATA');
     console.log(data, '<<===== DATA');
+
+    const thirdPartyRequest = await this.thirdPartyRequestsRepository.find({
+      where: { code: data.order_id },
+      order: { created_at: 'ASC' },
+    });
+    console.log(thirdPartyRequest, '<<===== THIRD PARTY REQUEST');
+
+    const thirdPartyRequestId = thirdPartyRequest[0].id;
+    await this.thirdPartyCallbacksRepository.save({
+      third_party_request_id: thirdPartyRequestId,
+      callback: data,
+    });
 
     const orderDelivery =
       await this.deliveriesService.findOrderDeliveryByCriteria({

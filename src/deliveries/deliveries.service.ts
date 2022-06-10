@@ -1,3 +1,4 @@
+import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import {
   BadRequestException,
   HttpStatus,
@@ -35,6 +36,7 @@ export class DeliveriesService {
     private readonly natsService: NatsService,
     private readonly messageService: MessageService,
     private readonly responseService: ResponseService,
+    private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
   ) {}
   async createOrder(data: any) {
     if (data.delivery_type == 'DELIVERY') {
@@ -178,6 +180,12 @@ export class DeliveriesService {
 
           this.saveNegativeResultOrder(deliveryData, err);
         });
+      const request = { header: headerRequest, url: urlDelivery };
+      this.thirdPartyRequestsRepository.save({
+        request,
+        response: orderDelivery,
+        code: data.id,
+      });
 
       if (orderDelivery) {
         const deliveryData: Partial<OrdersDocument> = {
@@ -304,6 +312,12 @@ export class DeliveriesService {
           ),
         );
       });
+    const request = { header: headerRequest, url: urlDelivery };
+    this.thirdPartyRequestsRepository.save({
+      request,
+      response: cancelOrderDelivery,
+      code: order_id,
+    });
 
     const orderHistory: Partial<OrderHistoriesDocument> = {
       order_id: orderDelivery.id,
