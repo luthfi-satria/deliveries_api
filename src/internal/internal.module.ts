@@ -10,6 +10,7 @@ import { CourierRepository } from 'src/database/repository/couriers.repository';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
+import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { DeliveriesService } from 'src/deliveries/deliveries.service';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
@@ -23,6 +24,7 @@ import { InternalService } from './internal.service';
     TypeOrmModule.forFeature([
       CourierRepository,
       OrdersRepository,
+      ThirdPartyRequestsRepository,
       OrderHistoriesRepository,
       SettingsRepository,
     ]),

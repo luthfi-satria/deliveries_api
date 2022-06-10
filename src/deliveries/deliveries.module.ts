@@ -10,6 +10,7 @@ import { CourierRepository } from 'src/database/repository/couriers.repository';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
+import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { SettingService } from 'src/setting/setting.service';
@@ -22,6 +23,7 @@ import { DeliveriesService } from './deliveries.service';
       CourierRepository,
       OrdersRepository,
       OrderHistoriesRepository,
+      ThirdPartyRequestsRepository,
       SettingsRepository,
     ]),
     HttpModule,
