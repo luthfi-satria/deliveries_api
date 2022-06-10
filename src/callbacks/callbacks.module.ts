@@ -16,6 +16,8 @@ import { SettingService } from 'src/setting/setting.service';
 import { RedisDeliveryService } from 'src/common/redis/redis-delivery.service';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
 import { BullModule } from '@nestjs/bull';
+import { ThirdPartyCallbacksRepository } from 'src/database/repository/third-party-callback.repository';
+import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { BullModule } from '@nestjs/bull';
       OrderHistoriesRepository,
       CourierRepository,
       SettingsRepository,
+      ThirdPartyCallbacksRepository,
+      ThirdPartyRequestsRepository,
     ]),
     HttpModule,
     BullModule.registerQueue({
