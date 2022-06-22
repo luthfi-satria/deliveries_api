@@ -38,6 +38,7 @@ export class DeliveriesService {
     private readonly responseService: ResponseService,
     private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
   ) {}
+
   async createOrder(data: any) {
     if (data.delivery_type == 'DELIVERY') {
       const courier = await this.couriersService.findOne(data.courier_id);
@@ -184,7 +185,7 @@ export class DeliveriesService {
       this.thirdPartyRequestsRepository.save({
         request,
         response: orderDelivery,
-        code: data.id,
+        code: orderDelivery.id,
       });
 
       if (orderDelivery) {
