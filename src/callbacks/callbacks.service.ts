@@ -18,18 +18,19 @@ export class CallbacksService {
     console.log(typeof data, '<<===== TYPEOF DATA');
     console.log(data, '<<===== DATA');
 
-    const thirdPartyRequest = await this.thirdPartyRequestsRepository.find({
+    const thirdPartyRequest = await this.thirdPartyRequestsRepository.findOne({
       where: { code: data.order_id },
       order: { created_at: 'ASC' },
     });
     console.log(thirdPartyRequest, '<<===== THIRD PARTY REQUEST');
 
-    const thirdPartyRequestId = thirdPartyRequest[0].id;
-    await this.thirdPartyCallbacksRepository.save({
-      third_party_request_id: thirdPartyRequestId,
-      callback: data,
-    });
-
+    if (thirdPartyRequest) {
+      const thirdPartyRequestId = thirdPartyRequest.id;
+      await this.thirdPartyCallbacksRepository.save({
+        third_party_request_id: thirdPartyRequestId,
+        callback: data,
+      });
+    }
     const orderDelivery =
       await this.deliveriesService.findOrderDeliveryByCriteria({
         delivery_id: data.order_id,
