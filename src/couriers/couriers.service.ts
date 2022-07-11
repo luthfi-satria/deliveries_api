@@ -29,7 +29,7 @@ export class CouriersService {
     @Inject(forwardRef(() => SettingService))
     private readonly settingService: SettingService,
     private readonly redisDeliveryService: RedisDeliveryService,
-  ) { }
+  ) {}
 
   async findAll(data: FindCourierDto) {
     try {
@@ -43,9 +43,9 @@ export class CouriersService {
       const destinationLongitude = data.destination_longitude;
       const isIncludePrice =
         originLatitude &&
-          originLongitude &&
-          destinationLatitude &&
-          destinationLongitude
+        originLongitude &&
+        destinationLatitude &&
+        destinationLongitude
           ? true
           : false;
       const courierId = data.courier_id || null;
@@ -55,27 +55,21 @@ export class CouriersService {
 
       const query = this.courierRepository.createQueryBuilder('couriers');
 
-      if (search) {
-        query.andWhere('couriers.name ilike :search', {
-          search: `%${search}%`,
-        });
-        query.orWhere('couriers.service_name ilike :search', {
-          search: `%${search}%`,
-        })
-      }
-
-      if (statuses) {
-        query.andWhere('couriers.status in (:...statuses)', {
-          statuses,
-        });
-      }
-
       if (courierId) {
         query.andWhere('couriers.id = :courierId', { courierId });
       }
 
       if (courierCodes) {
         query.andWhere('courier.code in (:...courierCode)', { courierCodes });
+      }
+
+      if (search) {
+        query.andWhere('couriers.name ilike :search', {
+          search: `%${search}%`,
+        });
+        query.orWhere('couriers.service_name ilike :search', {
+          search: `%${search}%`,
+        });
       }
 
       const [items, count] = await query
@@ -157,8 +151,14 @@ export class CouriersService {
         itemsWithInfos = [...items];
       }
 
+      if (statuses) {
+        itemsWithInfos = itemsWithInfos.filter((item) => {
+          return statuses.includes(item.status);
+        });
+      }
+
       return {
-        total_item: count,
+        total_item: itemsWithInfos.length,
         limit: perPage,
         current_page: currentPage,
         items: itemsWithInfos.map((courier: any) => {
