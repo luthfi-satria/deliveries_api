@@ -55,18 +55,6 @@ export class CouriersService {
 
       const query = this.courierRepository.createQueryBuilder('couriers');
 
-      if (search) {
-        query.andWhere('couriers.name ilike :search', {
-          search: `%${search}%`,
-        });
-      }
-
-      if (statuses) {
-        query.andWhere('couriers.status in (:...statuses)', {
-          statuses,
-        });
-      }
-
       if (courierId) {
         query.andWhere('couriers.id = :courierId', { courierId });
       }
@@ -76,6 +64,9 @@ export class CouriersService {
       }
 
       if (search) {
+        query.andWhere('couriers.name ilike :search', {
+          search: `%${search}%`,
+        });
         query.orWhere('couriers.service_name ilike :search', {
           search: `%${search}%`,
         });
@@ -160,8 +151,14 @@ export class CouriersService {
         itemsWithInfos = [...items];
       }
 
+      if (statuses) {
+        itemsWithInfos = itemsWithInfos.filter((item) => {
+          return statuses.includes(item.status);
+        });
+      }
+
       return {
-        total_item: count,
+        total_item: itemsWithInfos.length,
         limit: perPage,
         current_page: currentPage,
         items: itemsWithInfos.map((courier: any) => {
