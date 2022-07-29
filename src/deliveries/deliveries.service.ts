@@ -160,6 +160,9 @@ export class DeliveriesService {
         }
       }
       orderData.origin_note = orderData.order_note;
+      if (orderData.origin_note.length > 500) {
+        orderData.origin_note = orderData.origin_note.substring(0, 497) + '...';
+      }
 
       const urlDelivery = `${process.env.BITESHIP_API_BASEURL}/v1/orders`;
       const headerRequest = {
