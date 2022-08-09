@@ -159,6 +159,9 @@ export class DeliveriesService {
           }
         }
       }
+      if (orderData.order_note.length > 500) {
+        orderData.order_note = orderData.order_note.substring(0, 496) + '...';
+      }
       orderData.origin_note = orderData.order_note;
 
       const urlDelivery = `${process.env.BITESHIP_API_BASEURL}/v1/orders`;
@@ -181,7 +184,7 @@ export class DeliveriesService {
 
           this.saveNegativeResultOrder(deliveryData, err);
         });
-      const request = { header: headerRequest, url: urlDelivery };
+      const request = { header: headerRequest, url: urlDelivery, data: orderData, method: "POST" };
       this.thirdPartyRequestsRepository.save({
         request,
         response: orderDelivery,
@@ -313,7 +316,7 @@ export class DeliveriesService {
           ),
         );
       });
-    const request = { header: headerRequest, url: urlDelivery };
+    const request = { header: headerRequest, url: urlDelivery, data: data, method: "DELETE" };
     this.thirdPartyRequestsRepository.save({
       request,
       response: cancelOrderDelivery,
