@@ -3,6 +3,7 @@ import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { CommonService } from 'src/common/common.service';
 import { CouriersService } from 'src/couriers/couriers.service';
+import { DeliveriesService } from '../deliveries/deliveries.service';
 
 @Injectable()
 export class InternalService {
@@ -11,6 +12,7 @@ export class InternalService {
     private readonly responseService: ResponseService,
     private readonly commonService: CommonService,
     private readonly couriersService: CouriersService,
+    private readonly deliveryService: DeliveriesService,
   ) {}
 
   async getCouriersBulk(ids: string[]): Promise<any> {
@@ -29,5 +31,9 @@ export class InternalService {
       console.error(error);
       throw error;
     }
+  }
+
+  async cancelDelivery(orderId: string) {
+    return await this.deliveryService.cancelOrder(orderId);
   }
 }
