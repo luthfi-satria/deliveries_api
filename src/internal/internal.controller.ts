@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Query } from '@nestjs/common';
 import { InternalService } from './internal.service';
 import { ResponseStatusCode } from 'src/response/response.decorator';
 import { GetCouriersBulk, GetDeliveryPrice } from './dto/courier.dto';
@@ -21,5 +21,16 @@ export class InternalController {
   @ResponseStatusCode()
   async getDeliveryPrice(@Query() data: GetDeliveryPrice): Promise<any> {
     return this.internalService.getDeliveryPrice(data);
+  }
+
+  @Delete('internal/orders/:oid')
+  @ResponseStatusCode()
+  async deleteOrder(@Param('oid') order_id: string): Promise<any> {
+    try {
+      return await this.internalService.cancelDelivery(order_id);
+    } catch (errList) {
+      console.error(errList);
+      throw errList;
+    }
   }
 }
