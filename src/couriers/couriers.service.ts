@@ -33,6 +33,7 @@ export class CouriersService {
 
   async findAll(data: FindCourierDto) {
     try {
+      console.log('findAll couriers');
       const search = data.search || null;
       const perPage = data.limit || 10;
       const currentPage = data.page || 1;
