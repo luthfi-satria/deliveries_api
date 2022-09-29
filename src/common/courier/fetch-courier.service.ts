@@ -45,8 +45,8 @@ export class FetchCourierService {
         couriers: any[];
       } = await firstValueFrom(get_request);
 
-      const request = { header: headerRequest, url };
-      this.thirdPartyRequestsRepository.save({ request, response });
+      // const request = { header: headerRequest, url };
+      // this.thirdPartyRequestsRepository.save({ request, response });
 
       return response.couriers;
     } catch (e) {
@@ -77,7 +77,7 @@ export class FetchCourierService {
           }),
         );
       const response = await firstValueFrom(get_request);
-      const request = { header: headerRequest, url };
+      const request = { header: headerRequest, url, body: data, method: "POST" };
       this.thirdPartyRequestsRepository.save({ request, response });
 
       return response.pricing;
