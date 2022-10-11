@@ -26,4 +26,14 @@ export class SettingsDocument {
 
   @DeleteDateColumn({ nullable: true, select: false })
   deleted_at: Date;
+
+  @Column({
+    nullable: true,
+  })
+  description: string;
+
+  @Column({
+    default: 'text',
+  })
+  input_type: string;
 }
