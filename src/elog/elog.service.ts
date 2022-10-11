@@ -1,4 +1,3 @@
-import { HttpService } from '@nestjs/axios';
 import {
   BadRequestException,
   HttpStatus,
@@ -8,15 +7,12 @@ import {
 import { SettingsRepository } from 'src/database/repository/settings.repository';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
-import { ElogRepository } from './repository/elog.repository';
 
 @Injectable()
 export class ElogService {
   constructor(
-    private readonly elogRepository: ElogRepository,
     private readonly messageService: MessageService,
     private readonly responseService: ResponseService,
-    private readonly httpService: HttpService,
     private readonly settingRepo: SettingsRepository,
   ) {}
 
@@ -54,7 +50,7 @@ export class ElogService {
       const updateQuery = await this.settingRepo
         .createQueryBuilder()
         .update('deliveries_settings')
-        .set({ value: param.value })
+        .set(param)
         .where('id = :id', { id: param.id })
         .execute();
       return {

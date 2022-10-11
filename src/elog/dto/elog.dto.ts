@@ -7,4 +7,10 @@ export class EditElogSettingsDto {
 
   @IsOptional()
   value: string;
+
+  @IsOptional()
+  description: string;
+
+  @IsOptional()
+  input_type: string;
 }
