@@ -12,6 +12,8 @@ import { OrdersRepository } from 'src/database/repository/orders.repository';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { DeliveriesService } from 'src/deliveries/deliveries.service';
+import { ElogService } from 'src/elog/elog.service';
+import { ElogRepository } from 'src/elog/repository/elog.repository';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { SettingService } from 'src/setting/setting.service';
@@ -27,6 +29,7 @@ import { InternalService } from './internal.service';
       ThirdPartyRequestsRepository,
       OrderHistoriesRepository,
       SettingsRepository,
+      ElogRepository,
     ]),
     HttpModule,
     BullModule.registerQueue({
@@ -45,6 +48,7 @@ import { InternalService } from './internal.service';
     CouriersService,
     DeliveriesService,
     NatsService,
+    ElogService,
   ],
   exports: [AuthInternalService],
 })
