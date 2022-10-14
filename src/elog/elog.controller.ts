@@ -8,7 +8,7 @@ import { ResponseService } from 'src/response/response.service';
 import { EditElogSettingsDto } from './dto/elog.dto';
 import { ElogService } from './elog.service';
 
-@Controller('api/v1/elog')
+@Controller('api/v1/deliveries/elog')
 export class ElogController {
   constructor(
     private readonly messageService: MessageService,
