@@ -2,13 +2,13 @@ import { Controller, Delete, Get, Param, Query } from '@nestjs/common';
 import { InternalService } from './internal.service';
 import { ResponseStatusCode } from 'src/response/response.decorator';
 import { GetCouriersBulk, GetDeliveryPrice } from './dto/courier.dto';
-import { DeliveriesService } from 'src/deliveries/deliveries.service';
+import { ElogService } from 'src/elog/elog.service';
 
 @Controller('api/v1/deliveries')
 export class InternalController {
   constructor(
     private readonly internalService: InternalService,
-    private readonly deliveryService: DeliveriesService,
+    private readonly elogService: ElogService,
   ) {}
 
   @Get('internal/couriers/bulk')
@@ -31,6 +31,17 @@ export class InternalController {
     } catch (errList) {
       console.error(errList);
       throw errList;
+    }
+  }
+
+  @Get('internal/elog/settings')
+  @ResponseStatusCode()
+  async listElogSettings(): Promise<any> {
+    try {
+      return await this.elogService.listElogSettings();
+    } catch (err) {
+      console.log(err);
+      throw err;
     }
   }
 }
