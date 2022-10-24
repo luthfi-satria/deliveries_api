@@ -25,66 +25,67 @@ export class RegionalsService {
     page: string,
   ): Promise<any> {
     try {
-      const url = `${process.env.BASEURL_ELOG}/master/area/regency?page=${page}&limit=${limit}&name=${name}`;
-      return await firstValueFrom(
-        this.httpService
-          .get(url, {
-            params: {
-              data: [],
-            },
-          })
-          .pipe(map((resp) => resp.data)),
-      );
-    } catch (error) {
-      this.logger.log(error);
-      throw new BadRequestException(
-        this.responseService.error(
-          HttpStatus.BAD_REQUEST,
-          {
-            value: '',
-            property: '',
-            constraint: [
-              this.messageService.get('delivery.general.fail'),
-              error.message,
-            ],
-          },
-          'Bad Request',
-        ),
-      );
-    }
-  }
+        const headerRequest = {
+            'Content-Type': 'application/json',
+        };
+        return await firstValueFrom(
+            this.httpService
+            .get(
+                `${process.env.BASEURL_ELOG}/master/area/regency?page=${page}&limit=${limit}&name=${name}`,
+                { headers: headerRequest, params: { data: []} },
+                )
+                .pipe(map((resp) => resp.data)),
+            );
+        } catch (error) {
+            this.logger.log(error);
+            throw new BadRequestException(
+                this.responseService.error(
+                    HttpStatus.BAD_REQUEST,
+                    {
+                        value: '',
+                        property: '',
+                        constraint: [
+                            this.messageService.get('delivery.general.fail'),
+                            error.message,
+                        ],
+                    },
+                    'Bad Request',
+                    ),
+                );
+            }
+        }
 
   async getAllRegionals(
     limit: any,
     page: any,
   ): Promise<any> {
     try {
-      const url = `${process.env.BASEURL_ELOG}/master/area/regency?page=${page}&limit=${limit}`;
-      return await firstValueFrom(
-        this.httpService
-          .get(url, {
-            params: {
-              data: [],
-            },
-          })
-          .pipe(map((resp) => resp.data)),
-      );
+        const url = `${process.env.BASEURL_ELOG}/master/area/regency?page=${page}&limit=${limit}`;
+        return await firstValueFrom(
+            this.httpService
+            .get(url, {
+                params: {
+                data: [],
+                },
+            })
+            .pipe(map((resp) => resp.data)),
+        );
     } catch (error) {
-      this.logger.log(error);
-      throw new BadRequestException(
-        this.responseService.error(
-          HttpStatus.BAD_REQUEST,
-          {
-            value: '',
-            property: '',
-            constraint: [
-              this.messageService.get('delivery.general.fail'),
-              error.message,
-            ],
-          },
-          'Bad Request',
-        ),
-      );
+        this.logger.log(error);
+        throw new BadRequestException(
+            this.responseService.error(
+                HttpStatus.BAD_REQUEST,
+                {
+                    value: '',
+                    property: '',
+                    constraint: [
+                        this.messageService.get('delivery.general.fail'),
+                        error.message,
+                    ],
+                },
+                'Bad Request',
+                ),
+            );
+        }
     }
-  }
 }

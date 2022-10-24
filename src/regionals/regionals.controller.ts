@@ -1,7 +1,5 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { RegionalsService } from './regionals.service';
-import { UserTypeAndLevel } from 'src/auth/guard/user-type-and-level.decorator';
-import { AuthJwtGuard } from 'src/auth/auth.decorators';
 import { ResponseStatusCode } from 'src/response/response.decorator';
 import { RSuccessMessage } from 'src/response/response.interface';
 import { MessageService } from 'src/message/message.service';
