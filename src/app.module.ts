@@ -14,6 +14,7 @@ import { SeederModule } from './database/seeders/seeder.module';
 import { DeliveriesModule } from './deliveries/deliveries.module';
 import { InternalModule } from './internal/internal.module';
 import { SettingModule } from './setting/setting.module';
+import { RegionalsModule } from './regionals/regionals.module';
 import { ElogModule } from './elog/elog.module';
 
 @Module({
@@ -38,6 +39,7 @@ import { ElogModule } from './elog/elog.module';
     DeliveriesModule,
     SettingModule,
     SeederModule,
+    RegionalsModule,
     ElogModule,
   ],
   controllers: [AppController],
