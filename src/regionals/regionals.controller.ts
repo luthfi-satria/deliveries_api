@@ -4,6 +4,8 @@ import { ResponseStatusCode } from 'src/response/response.decorator';
 import { RSuccessMessage } from 'src/response/response.interface';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
+import { UserTypeAndLevel } from 'src/auth/guard/user-type-and-level.decorator';
+import { AuthJwtGuard } from 'src/auth/auth.decorators';
 
 @Controller('api/v1/deliveries/elog')
 export class RegionalsController {
@@ -14,8 +16,8 @@ export class RegionalsController {
   ) {}
 
   @Get('/regionals/:name/:page/:limit')
-  //@UserTypeAndLevel('admin.*')
-  //@AuthJwtGuard()
+  @UserTypeAndLevel('admin.*')
+  @AuthJwtGuard()
   @ResponseStatusCode()
   async regionalsElogByName(
     @Param('name') name: string,
@@ -23,7 +25,6 @@ export class RegionalsController {
     @Param('page') page: string,
   ): Promise<RSuccessMessage> {
     try {
-      console.log('testting');
       const elogRegionals =  await this.regionalsService.listElogRegionals(
         name, 
         limit, 
@@ -41,8 +42,8 @@ export class RegionalsController {
   }
 
   @Get('/regionals/:page/:limit')
-  //@UserTypeAndLevel('admin.*')
-  //@AuthJwtGuard()
+  @UserTypeAndLevel('admin.*')
+  @AuthJwtGuard()
   @ResponseStatusCode()
   async getAllRegionals(
     @Param('limit') limit: any,
