@@ -25,11 +25,11 @@ export class RegionalsController {
     @Param('page') page: string,
   ): Promise<RSuccessMessage> {
     try {
-      const elogRegionals =  await this.regionalsService.listElogRegionals(
-        name, 
-        limit, 
-        page
-        );
+      const elogRegionals = await this.regionalsService.listElogRegionals(
+        name,
+        limit,
+        page,
+      );
       return this.responseService.success(
         true,
         this.messageService.get('delivery.general.success'),
@@ -51,10 +51,10 @@ export class RegionalsController {
   ): Promise<RSuccessMessage> {
     try {
       console.log('testting');
-      const elogRegionals =  await this.regionalsService.getAllRegionals(
-        limit, 
-        page
-        );
+      const elogRegionals = await this.regionalsService.getAllRegionals(
+        limit,
+        page,
+      );
       return this.responseService.success(
         true,
         this.messageService.get('delivery.general.success'),

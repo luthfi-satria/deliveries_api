@@ -16,12 +16,7 @@ import { RegionalsService } from './regionals.service';
     ConfigModule,
   ],
   controllers: [RegionalsController],
-  providers: [
-    RegionalsService, 
-    MessageService, 
-    ResponseService, 
-    CommonService,
-  ],
+  providers: [RegionalsService, MessageService, ResponseService, CommonService],
   exports: [RegionalsService],
 })
 export class RegionalsModule {}
