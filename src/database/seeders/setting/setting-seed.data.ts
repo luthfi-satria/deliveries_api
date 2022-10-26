@@ -4,4 +4,5 @@ export const settingSeedsData = {
   elog_multipickup_radius: ['500'],
   elog_timezone: ['GMT+7'],
   elog_operational_hours: ['07:00', '22:00'],
+  elog_api_url: ['https://'],
 };
