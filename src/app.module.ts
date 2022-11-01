@@ -9,6 +9,7 @@ import { AuthModule } from './auth/auth.module';
 import { CallbacksModule } from './callbacks/callbacks.module';
 import { CommonModule } from './common/common.module';
 import { CouriersModule } from './couriers/couriers.module';
+import { CronElogModule } from './cron/cron-elog.module';
 import { DatabaseService } from './database/database.service';
 import { SeederModule } from './database/seeders/seeder.module';
 import { DeliveriesModule } from './deliveries/deliveries.module';
@@ -37,6 +38,7 @@ import { SettingModule } from './setting/setting.module';
     DeliveriesModule,
     SettingModule,
     SeederModule,
+    CronElogModule,
   ],
   controllers: [AppController],
   providers: [AppService],
