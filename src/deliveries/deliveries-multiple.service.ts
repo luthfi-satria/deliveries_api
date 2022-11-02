@@ -1,10 +1,10 @@
-import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import {
   BadRequestException,
   HttpStatus,
   Injectable,
   Logger,
 } from '@nestjs/common';
+import moment from 'moment';
 import { CommonService } from 'src/common/common.service';
 import { NatsService } from 'src/common/nats/nats/nats.service';
 import { CouriersService } from 'src/couriers/couriers.service';
@@ -20,12 +20,12 @@ import {
 } from 'src/database/entities/orders.entity';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
-import moment from 'moment';
-import { ResponseService } from 'src/response/response.service';
+import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { MessageService } from 'src/message/message.service';
+import { ResponseService } from 'src/response/response.service';
 
 @Injectable()
-export class DeliveriesService {
+export class DeliveriesMultipleService {
   logger = new Logger();
 
   constructor(
@@ -38,23 +38,9 @@ export class DeliveriesService {
     private readonly responseService: ResponseService,
     private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
   ) {}
-
-  async createOrder(data: any) {
+  async createMultipleOrder(data: any) {
     if (data.delivery_type == 'DELIVERY') {
-      const courier = await this.couriersService.findOne(data.courier_id);
-      if (!courier) {
-        const errContaint: any = {
-          value: data.courier_id,
-          property: 'courier_id',
-          constraint: ['Courier Id tidak ditemukan.'],
-        };
-        const deliveryData: Partial<OrdersDocument> = {
-          order_id: data.id,
-          response_payload: errContaint,
-        };
-        this.saveNegativeResultOrder(deliveryData, errContaint);
-      }
-
+      //** SEARCH CUSTOEMR BY ID */
       const url = `${process.env.BASEURL_CUSTOMERS_SERVICE}/api/v1/internal/customerS/${data.customer_id}`;
       const customer: any = await this.commonService.getHttp(url);
       if (!customer) {
@@ -69,6 +55,8 @@ export class DeliveriesService {
         };
         this.saveNegativeResultOrder(deliveryData, errContaint);
       }
+
+      //** SEARCH STORE BY ID */
       const urlStore = `${process.env.BASEURL_MERCHANTS_SERVICE}/api/v1/internal/merchants/stores/${data.store_id}`;
       const store: any = await this.commonService.getHttp(urlStore);
       if (!store) {
@@ -103,8 +91,6 @@ export class DeliveriesService {
           latitude: data.address.location_latitude,
           longitude: data.address.location_longitude,
         },
-        courier_company: courier.courier.code,
-        courier_type: courier.courier.service_code,
         courier_insurance: 0,
         delivery_type: 'now',
         delivery_date: moment().format('YYYY-MM-DD'),
@@ -164,6 +150,7 @@ export class DeliveriesService {
       }
       orderData.origin_note = orderData.order_note;
 
+      //** SEARCH COURIER DELIVERIES ELOG */
       const urlDelivery = `${process.env.BITESHIP_API_BASEURL}/v1/orders`;
       const headerRequest = {
         'Content-Type': 'application/json',
