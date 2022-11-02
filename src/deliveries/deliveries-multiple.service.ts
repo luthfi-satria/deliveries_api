@@ -20,6 +20,7 @@ import {
 } from 'src/database/entities/orders.entity';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
+import { SettingsRepository } from 'src/database/repository/settings.repository';
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
@@ -37,7 +38,39 @@ export class DeliveriesMultipleService {
     private readonly messageService: MessageService,
     private readonly responseService: ResponseService,
     private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
+    private readonly settingRepository: SettingsRepository,
   ) {}
+
+  //** Elog API Setup */
+  async urlElog() {
+    try {
+      const query = await this.settingRepository
+        .createQueryBuilder('d')
+        .select(['d.value'])
+        .where('name = :name', { name: 'elog_api_url' })
+        .getOne();
+
+      return query;
+    } catch (error) {
+      this.logger.log(error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: [
+              this.messageService.get('delivery.general.fail'),
+              error.message,
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  //** Create Order Elog */
   async createMultipleOrder(data: any) {
     if (data.delivery_type == 'DELIVERY') {
       //** SEARCH CUSTOEMR BY ID */
