@@ -35,7 +35,11 @@ export class DeliveriesMultipleService {
   async getElogSettings() {
     try {
       const result = {};
-      const settings = await this.listElogSettings();
+      const settings = await this.settingRepository
+        .createQueryBuilder()
+        .where('name like :name', { name: '%elog_%' })
+        .withDeleted()
+        .getMany();
 
       for (const Item in settings) {
         result[settings[Item].name] = JSON.parse(
@@ -50,160 +54,149 @@ export class DeliveriesMultipleService {
     }
   }
 
-  //** GET SETUP ELOG */
-  async listElogSettings() {
-    try {
-      const query = await this.settingRepository
-        .createQueryBuilder()
-        .where('name like :name', { name: '%elog_%' })
-        .withDeleted()
-        .getMany();
-
-      return query;
-    } catch (error) {
-      this.logger.log(error);
-      throw new BadRequestException(
-        this.responseService.error(
-          HttpStatus.BAD_REQUEST,
-          {
-            value: '',
-            property: '',
-            constraint: [
-              this.messageService.get('delivery.general.fail'),
-              error.message,
-            ],
-          },
-          'Bad Request',
-        ),
-      );
-    }
+  elogData(customer, store) {
+    const elogData = {
+      pickup_destinations: [
+        {
+          longitude: store.location_latitude,
+          latitude: store.location_longitude,
+          contact_name: store.name,
+          contact_phone: store.phone,
+          address: store.address,
+          address_name: store.name,
+          location_description: '',
+          note: '',
+          item: [
+            {
+              name: ' handphone',
+              weight: 0,
+              quantity: 1,
+              price: 10000,
+            },
+          ],
+        },
+      ],
+      dropoff_destinations: [
+        {
+          longitude: store.location_latitude,
+          latitude: store.location_longitude,
+          contact_name: customer.name,
+          contact_phone: customer.phone,
+          address: 'jl mampang no 26',
+          address_name: customer.address_detail,
+          location_description: '',
+          note: '',
+        },
+      ],
+      price: 10000,
+    };
+    return elogData;
   }
 
   async createMultipleOrder(data: any) {
     if (data.delivery_type == 'DELIVERY') {
-      //** GET DATA CUSTOMER BY ID */
-      const url = `${process.env.BASEURL_CUSTOMERS_SERVICE}/api/v1/internal/customers/${data.customer_id}`;
-      const customer: any = await this.commonService.getHttp(url);
-      if (!customer) {
-        const errContaint: any = {
-          value: data.customer_id,
-          property: 'customer_id',
-          constraint: ['Customer Id tidak ditemukan.'],
-        };
-        const deliveryData: Partial<OrdersDocument> = {
-          order_id: data.id,
-          response_payload: errContaint,
-        };
-        this.saveNegativeResultOrder(deliveryData, errContaint);
-      }
+      // GET DATA CUSTOMER
+      const customer = await this.getDataCustomer(data);
 
       //** GET DATA STORE BY ID */
-      const urlStore = `${process.env.BASEURL_MERCHANTS_SERVICE}/api/v1/internal/merchants/stores/${data.store_id}`;
-      const store: any = await this.commonService.getHttp(urlStore);
-      if (!store) {
-        const errContaint: any = {
-          value: data.store_id,
-          property: 'store_id',
-          constraint: ['Store Id tidak ditemukan.'],
-        };
-        const deliveryData: Partial<OrdersDocument> = {
-          order_id: data.id,
-          response_payload: errContaint,
-        };
-        this.saveNegativeResultOrder(deliveryData, errContaint);
-      }
-
+      const store = await this.getDataStore(data);
       console.log(customer['active_addresses'].location_latitude);
 
       //** ELOG DATA */
-      const elogData = {
-        pickup_destinations: [
-          {
-            longitude: store.location_latitude,
-            latitude: store.location_longitude,
-            contact_name: store.name,
-            contact_phone: store.phone,
-            address: store.address,
-            address_name: store.name,
-            location_description: '',
-            note: '',
-            item: [
-              {
-                name: ' handphone',
-                weight: 0,
-                quantity: 1,
-                price: 10000,
-              },
-            ],
-          },
-        ],
-        dropoff_destinations: [
-          {
-            longitude: store.location_latitude,
-            latitude: store.location_longitude,
-            contact_name: customer.name,
-            contact_phone: customer.phone,
-            address: 'jl mampang no 26',
-            address_name: customer.address_detail,
-            location_description: '',
-            note: '',
-          },
-        ],
-        price: 10000,
-      };
-
+      const elogData = this.elogData(customer, store);
       console.log(elogData);
 
       //** ELOG SETTING */
-      const elogSettings = await this.getElogSettings();
-      const elogUrl = elogSettings['elog_api_url'][0];
-      const elogUsername = elogSettings['elog_username'][0];
-      const elogPassword = elogSettings['elog_password'][0];
-
-      //** EXECUTE CREATE ORDER BY POST */
-      const urlDeliveryElog = `${elogUrl}/openapi/v0/order/send`;
-      const headerRequest = {
-        'Content-Type': 'application/json',
-        Authorization:
-          'basic ' +
-          btoa(unescape(encodeURIComponent(elogUsername + ':' + elogPassword))),
-      };
-
-      console.log(urlDeliveryElog);
-
-      //** EXECUTE CREATE ORDER BY POST */
-      const orderDelivery: any = await this.commonService
-        .postHttp(urlDeliveryElog, elogData, headerRequest)
-        .catch((err) => {
-          const deliveryData: Partial<OrdersDocument> = {
-            order_id: data.id,
-            status: OrdersStatus.DRIVER_NOT_FOUND,
-            response_payload: err,
-          };
-
-          //** BROADCAST */
-          this.natsService.clientEmit(`deliveries.order.failed`, deliveryData);
-
-          //** IF ERROR */
-          this.saveNegativeResultOrder(deliveryData, err);
-        });
-
-      //** EXECUTE CREATE ORDER BY POST */
-      const request = {
-        header: headerRequest,
-        url: urlDeliveryElog,
-        data: elogData,
-        method: 'POST',
-      };
-      console.log(request);
-
-      //** SAVE ELOG DELIVERIES TO DELIVERIES ORDERS */
-      this.thirdPartyRequestsRepository.save({
-        request,
-        response: orderDelivery,
-        code: orderDelivery.id,
-      });
+      await this.elogApisHandling(data, elogData);
     }
+  }
+
+  async getDataCustomer(data: any) {
+    //** GET DATA CUSTOMER BY ID */
+    const url = `${process.env.BASEURL_CUSTOMERS_SERVICE}/api/v1/internal/customers/${data.customer_id}`;
+    const customer: any = await this.commonService.getHttp(url);
+    if (!customer) {
+      const errContaint: any = {
+        value: data.customer_id,
+        property: 'customer_id',
+        constraint: ['Customer Id tidak ditemukan.'],
+      };
+      const deliveryData: Partial<OrdersDocument> = {
+        order_id: data.id,
+        response_payload: errContaint,
+      };
+      this.saveNegativeResultOrder(deliveryData, errContaint);
+    }
+    return customer;
+  }
+
+  async getDataStore(data: any) {
+    const urlStore = `${process.env.BASEURL_MERCHANTS_SERVICE}/api/v1/internal/merchants/stores/${data.store_id}`;
+    const store: any = await this.commonService.getHttp(urlStore);
+    if (!store) {
+      const errContaint: any = {
+        value: data.store_id,
+        property: 'store_id',
+        constraint: ['Store Id tidak ditemukan.'],
+      };
+      const deliveryData: Partial<OrdersDocument> = {
+        order_id: data.id,
+        response_payload: errContaint,
+      };
+      this.saveNegativeResultOrder(deliveryData, errContaint);
+    }
+    return store;
+  }
+
+  async elogApisHandling(data, elogData) {
+    const elogSettings = await this.getElogSettings();
+    const elogUrl = elogSettings['elog_api_url'][0];
+    const elogUsername = elogSettings['elog_username'][0];
+    const elogPassword = elogSettings['elog_password'][0];
+
+    //** EXECUTE CREATE ORDER BY POST */
+    const urlDeliveryElog = `${elogUrl}/openapi/v0/order/send`;
+    const headerRequest = {
+      'Content-Type': 'application/json',
+      Authorization:
+        'basic ' +
+        btoa(unescape(encodeURIComponent(elogUsername + ':' + elogPassword))),
+    };
+
+    console.log(urlDeliveryElog);
+
+    //** EXECUTE CREATE ORDER BY POST */
+    const orderDelivery: any = await this.commonService
+      .postHttp(urlDeliveryElog, elogData, headerRequest)
+      .catch((err) => {
+        const deliveryData: Partial<OrdersDocument> = {
+          order_id: data.id,
+          status: OrdersStatus.DRIVER_NOT_FOUND,
+          response_payload: err,
+        };
+
+        //** BROADCAST */
+        this.natsService.clientEmit(`deliveries.order.failed`, deliveryData);
+
+        //** IF ERROR */
+        this.saveNegativeResultOrder(deliveryData, err);
+      });
+
+    //** EXECUTE CREATE ORDER BY POST */
+    const request = {
+      header: headerRequest,
+      url: urlDeliveryElog,
+      data: elogData,
+      method: 'POST',
+    };
+    console.log(request);
+
+    //** SAVE ELOG DELIVERIES TO DELIVERIES ORDERS */
+    this.thirdPartyRequestsRepository.save({
+      request,
+      response: orderDelivery,
+      code: orderDelivery.id,
+    });
   }
 
   async saveNegativeResultOrder(
