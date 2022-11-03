@@ -12,12 +12,12 @@ export class NatsController {
     private readonly deliveriesMultipleService: DeliveriesMultipleService,
   ) {}
   //** Handling Deliveries Elog */
-  @EventPattern('orders.order.accepted')
-  async saveEfoodMultiple(@Payload() data: any) {
-    this.logger.log('orders.order.multiple.accepted');
-    // console.log('data: ', data);
-    this.deliveriesMultipleService.createMultipleOrder(data);
-  }
+  // @EventPattern('orders.mutiple.order.accepted')
+  // async saveEfoodMultiple(@Payload() data: any) {
+  //   this.logger.log('orders.mutiple.order.accepted');
+  //   // console.log('data: ', data);
+  //   this.deliveriesMultipleService.createMultipleOrder(data);
+  // }
 
   @EventPattern('orders.order.accepted')
   async saveMenuEfood(@Payload() data: any) {
