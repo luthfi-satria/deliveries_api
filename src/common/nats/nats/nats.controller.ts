@@ -1,12 +1,23 @@
 import { Controller, Logger } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
+import { DeliveriesMultipleService } from 'src/deliveries/deliveries-multiple.service';
 import { DeliveriesService } from 'src/deliveries/deliveries.service';
 
 @Controller('nats')
 export class NatsController {
   logger = new Logger(NatsController.name);
 
-  constructor(private readonly deliveriesService: DeliveriesService) {}
+  constructor(
+    private readonly deliveriesService: DeliveriesService,
+    private readonly deliveriesMultipleService: DeliveriesMultipleService,
+  ) {}
+  //** Handling Deliveries Elog */
+  @EventPattern('orders.order.accepted')
+  async saveEfoodMultiple(@Payload() data: any) {
+    this.logger.log('orders.order.multiple.accepted');
+    // console.log('data: ', data);
+    this.deliveriesMultipleService.createMultipleOrder(data);
+  }
 
   @EventPattern('orders.order.accepted')
   async saveMenuEfood(@Payload() data: any) {
