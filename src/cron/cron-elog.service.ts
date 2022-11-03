@@ -25,7 +25,7 @@ export class CronElogService {
   /**
    *
    */
-  @Cron('10 * * * * *')
+  @Cron('60 * * * * *')
   async retrieveElogStatus() {
     this.logger.log('---- STARTING CRON JOBS -----');
     await this.updateElogStatus();
@@ -99,6 +99,9 @@ export class CronElogService {
 
         // update table deliveries_order
         await this.deliveryRepo.save(DeliveryData);
+
+        this.logger.log('CRON JOBS::COMMUNICATE WITH ORDERS SERVICE');
+        console.log(OrdersGroupsData);
 
         // call orders service
         await this.updateOrderStatus(OrdersGroupsData);
