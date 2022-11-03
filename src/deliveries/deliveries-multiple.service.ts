@@ -106,15 +106,36 @@ export class DeliveriesMultipleService {
       this.saveNegativeResultOrder(deliveryData, errContaint);
     }
 
+    //** CREATE ORDER TO ELOG */
+    let OrderNotes = `No. order: ${data.no}\n `;
+    OrderNotes =
+      OrderNotes.length > 500
+        ? OrderNotes.substring(0, 496) + '...'
+        : OrderNotes;
+
+    //** CREATE ORDER TO ELOG */
+    const elogData = {
+      pickup_destinations: [],
+      dropoff_destinations: [
+        {
+          latitude: customer.location_latitude,
+          longitude: customer.location_longitude,
+          address: `${customer.address}`,
+          address_name: customer.name,
+          contact_phone_no: customer.phone,
+          contact_name: customer.name,
+          note: OrderNotes,
+          location_description: `${data.address.address_detail}`,
+        },
+      ],
+      price: 10000,
+    };
+
     //** ELOG SETTING */
     const elogSettings = await this.getElogSettings();
     const elogUrl = elogSettings['elog_api_url'][0];
     const elogUsername = elogSettings['elog_username'][0];
     const elogPassword = elogSettings['elog_password'][0];
-
-    //** CREATE ORDER TO ELOG */
-    const elogData = [];
-    elogData.push({});
   }
 
   saveNegativeResultOrder(
