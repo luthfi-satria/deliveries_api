@@ -69,7 +69,7 @@ export class CronElogService {
         const DeliveryHistory = [];
         const OrdersGroupsData = [];
         elogResponse.data.forEach((Rows) => {
-          const status = this.statusConverter(Rows.history[0].order_status);
+          const status = this.statusConverter(Rows.status);
           DeliveryData.push({
             id: reqData[Rows.id].id,
             status: status.orderStatus,
@@ -245,11 +245,11 @@ export class CronElogService {
         break;
       case 'GO_TO_LOCATION_DROPOFF':
         status = OrdersStatus.DRIVER_FOUND;
-        delivStatus = OrdersServiceStatus.Picked;
+        delivStatus = OrdersServiceStatus.Dropping_of;
         break;
       case 'ARRIVE_AT_LOCATION_DROPOFF':
         status = OrdersStatus.DRIVER_FOUND;
-        delivStatus = OrdersServiceStatus.Picked;
+        delivStatus = OrdersServiceStatus.Dropping_of;
         break;
       case 'LOADING_GOODS_DROPOFF':
         status = OrdersStatus.DRIVER_FOUND;
