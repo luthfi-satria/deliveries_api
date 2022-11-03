@@ -67,6 +67,7 @@ export class CronElogService {
       const DeliveryData = [];
       if (typeof elogResponse != 'undefined' && elogResponse.data.length > 0) {
         const DeliveryHistory = [];
+        const OrdersGroupsData = [];
         elogResponse.data.forEach((Rows) => {
           const status = this.statusConverter(Rows.history[0].order_status);
           DeliveryData.push({
@@ -80,6 +81,12 @@ export class CronElogService {
             status: status.orderStatus,
             service_status: status.deliveryStatus,
           });
+
+          OrdersGroupsData.push({
+            group_id: reqData[Rows.id].order_id,
+            delivery_info: Rows,
+            delivery_status: status.orderStatus,
+          });
         });
 
         this.logger.log('CRON JOBS::SAVE DELIVERY ORDER HISTORIES');
@@ -92,6 +99,9 @@ export class CronElogService {
 
         // update table deliveries_order
         await this.deliveryRepo.save(DeliveryData);
+
+        // call orders service
+        await this.updateOrderStatus(OrdersGroupsData);
       }
     }
     this.logger.log('---- STOPPING CRON JOBS ----');
@@ -193,9 +203,9 @@ export class CronElogService {
         },
       };
 
-      const url = `${process.env.BASEURL_ORDERS_SERVICE}`;
+      const url = `${process.env.BASEURL_ORDERS_SERVICE}/api/v1/orders/internal/update-multipickup-orders`;
       const targetStatus = await firstValueFrom(
-        this.httpService.post(url, { order_ids: reqData }, headerRequest).pipe(
+        this.httpService.put(url, reqData, headerRequest).pipe(
           map((resp) => resp.data),
           catchError(() => {
             throw new ForbiddenException(
