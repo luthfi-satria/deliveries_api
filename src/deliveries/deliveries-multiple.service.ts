@@ -187,7 +187,7 @@ export class DeliveriesMultipleService {
         .postHttp(urlDeliveryElog, elogData, headerRequest)
         .catch((err) => {
           const deliveryData: Partial<OrdersDocument> = {
-            order_id: data.id,
+            order_id: data.group_id,
             status: OrdersStatus.DRIVER_NOT_FOUND,
             response_payload: err,
           };
