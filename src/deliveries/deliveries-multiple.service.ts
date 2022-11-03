@@ -104,6 +104,7 @@ export class DeliveriesMultipleService {
         };
         this.saveNegativeResultOrder(deliveryData, errContaint);
       }
+
       const orderData = {
         origin_contact_name: store.name,
         origin_contact_phone: store.phone,
@@ -183,13 +184,23 @@ export class DeliveriesMultipleService {
       }
       orderData.origin_note = orderData.order_note;
 
-      //** SEARCH COURIER DELIVERIES ELOG */
-      const urlDelivery = `${process.env.BITESHIP_API_BASEURL}/v1/orders`;
+      //** ELOG URL API */
+      const link = await this.urlElog();
+      const urls = link.value
+        .replace('{', '')
+        .replace('}', '')
+        .replace('"', '')
+        .replace('"', '');
+
+      //** CREATE ORDER ELOG */
+      const urlDelivery = `${urls}/openapi/v0/order/send`;
       const headerRequest = {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.BITESHIP_API_KEY}`,
+        Authorization: `Basic cmFobWFkaGFuaS50aHgxN2tAZ21haWwuY29tOk1yLlRIeDE3aw==`,
       };
-      this.logger.log(orderData, 'Payload Biteship');
+
+      //** EXECUTE TO CREATE ORDER ELOG */
+      //** CREATE LOPP FOR EXECUTE IN ELOG */
       const orderDelivery: any = await this.commonService
         .postHttp(urlDelivery, orderData, headerRequest)
         .catch((err) => {
