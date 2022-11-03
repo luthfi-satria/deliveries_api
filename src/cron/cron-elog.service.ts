@@ -185,6 +185,32 @@ export class CronElogService {
     }
   }
 
+  async updateOrderStatus(reqData: any) {
+    try {
+      const headerRequest = {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      };
+
+      const url = `${process.env.BASEURL_ORDERS_SERVICE}`;
+      const targetStatus = await firstValueFrom(
+        this.httpService.post(url, { order_ids: reqData }, headerRequest).pipe(
+          map((resp) => resp.data),
+          catchError(() => {
+            throw new ForbiddenException(
+              `Order service: ${url} is not available`,
+            );
+          }),
+        ),
+      );
+
+      return targetStatus;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   statusConverter(status: string) {
     let delivStatus = OrdersServiceStatus.Confirmed;
     switch (status) {
