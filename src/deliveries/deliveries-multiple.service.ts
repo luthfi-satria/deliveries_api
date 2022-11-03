@@ -1,8 +1,15 @@
-import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { CommonService } from 'src/common/common.service';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import { OrdersDocument } from 'src/database/entities/orders.entity';
 import { ResponseService } from 'src/response/response.service';
+import { SettingsRepository } from 'src/database/repository/settings.repository';
+import { MessageService } from 'src/message/message.service';
 
 @Injectable()
 export class DeliveriesMultipleService {
@@ -10,7 +17,59 @@ export class DeliveriesMultipleService {
     private readonly commonService: CommonService,
     private readonly ordersRepository: OrdersRepository,
     private readonly responseService: ResponseService,
+    private readonly settingRepository: SettingsRepository,
+    private readonly messageService: MessageService,
   ) {}
+
+  logger = new Logger();
+
+  //** GET SETUP ELOG */
+  async getElogSettings() {
+    try {
+      const result = {};
+      const settings = await this.listElogSettings();
+
+      for (const Item in settings) {
+        result[settings[Item].name] = JSON.parse(
+          settings[Item].value.replace('{', '[').replace('}', ']'),
+        );
+      }
+
+      return result;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  //** GET SETUP ELOG */
+  async listElogSettings() {
+    try {
+      const query = await this.settingRepository
+        .createQueryBuilder()
+        .where('name like :name', { name: '%elog_%' })
+        .withDeleted()
+        .getMany();
+
+      return query;
+    } catch (error) {
+      this.logger.log(error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: [
+              this.messageService.get('delivery.general.fail'),
+              error.message,
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
 
   async createMultipleOrder(data: any) {
     if (data.delivery_type == 'DELIVERY') {
@@ -46,6 +105,12 @@ export class DeliveriesMultipleService {
       };
       this.saveNegativeResultOrder(deliveryData, errContaint);
     }
+
+    //** ELOG SETTING */
+    const elogSettings = await this.getElogSettings();
+    const elogUrl = elogSettings['elog_api_url'][0];
+    const elogUsername = elogSettings['elog_username'][0];
+    const elogPassword = elogSettings['elog_password'][0];
 
     //** CREATE ORDER TO ELOG */
     const elogData = [];
