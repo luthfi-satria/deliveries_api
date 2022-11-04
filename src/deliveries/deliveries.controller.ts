@@ -1,5 +1,4 @@
 import { Body, Controller, Delete, Param, Post } from '@nestjs/common';
-import { Payload } from '@nestjs/microservices';
 import { AuthJwtGuard } from 'src/auth/auth.decorators';
 import { UserTypeAndLevel } from 'src/auth/guard/user-type-and-level.decorator';
 import { MessageService } from 'src/message/message.service';
@@ -40,9 +39,9 @@ export class DeliveriesController {
     }
   }
 
-  @Post('testting-elog')
+  @Post('/testing-elog')
   @ResponseStatusCode()
-  async testElog(@Payload() data: any): Promise<any> {
+  async testElog(@Body() data: any): Promise<any> {
     await this.deliveriesMultipleService.createMultipleOrder(data);
     return this.responseService.success(
       true,
