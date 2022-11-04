@@ -31,6 +31,56 @@ export class DeliveriesMultipleService {
 
   logger = new Logger();
 
+  async createMultipleOrder(data: any) {
+    data = await this.orderData();
+    if (data.delivery_type == 'DELIVERY') {
+      // GET DATA CUSTOMER
+      this.logger.log('PREPARE GET CUSTOMER DATA');
+      const customer = await this.getDataCustomer(data);
+
+      //** ELOG DATA */
+      this.logger.log('PREPARE FETCH ELOG DATA');
+      const elogData = this.elogData(customer, data);
+
+      this.logger.log('PREPARE PICKUP DESTINATIONS');
+
+      for (let index = 0; index < data.orders.length; index++) {
+        const rows = data.orders[index];
+        const store = await this.getDataStore(rows);
+        const CartItems = [];
+        if (rows.cart_payload.length > 0) {
+          const payload = rows.cart_payload;
+          payload.forEach((Items) => {
+            CartItems.push({
+              name: Items.menu.name,
+              price: Items.price,
+              weight: 1,
+              quantity: Items.quantity,
+            });
+          });
+        }
+
+        elogData.pickup_destinations.push({
+          latitude: store.location_latitude,
+          longitude: store.location_longitude,
+          address: store.address,
+          address_name: store.name,
+          contact_phone_no: '08872373723', // hanya dapat phone?
+          contact_name: 'Richesse....', // maksimal hanya 20 karakter saja?
+          note: '',
+          location_description: '',
+          items: CartItems,
+        });
+      }
+
+      this.logger.log(elogData, 'ELOG DATA RESULTS');
+
+      //** ELOG SETTING */
+      await this.elogApisHandling(data, elogData);
+      return elogData;
+    }
+  }
+
   //** GET SETUP ELOG */
   async getElogSettings() {
     try {
@@ -54,61 +104,109 @@ export class DeliveriesMultipleService {
     }
   }
 
-  elogData(customer, store) {
+  elogData(customer, data) {
     const elogData = {
-      pickup_destinations: [
+      pickup_destinations: [],
+      dropoff_destinations: [
         {
-          longitude: store.location_latitude,
-          latitude: store.location_longitude,
-          contact_name: store.name,
-          contact_phone: store.phone,
-          address: store.address,
-          address_name: store.name,
-          location_description: '',
+          latitude: customer.active_addresses[0].location_latitude,
+          longitude: customer.active_addresses[0].location_longitude,
+          address: customer.active_addresses[0].address,
+          address_name: customer.active_addresses[0].name,
+          contact_phone_no: customer.phone,
+          contact_name: customer.name,
           note: '',
-          item: [
+          location_description: customer.active_addresses[0].address_detail,
+        },
+      ],
+      price: 'price' in data ? data.price : 0,
+    };
+    console.log(elogData);
+    return elogData;
+  }
+
+  orderData() {
+    const data = {
+      group_id: 'de2af395-c500-4ece-8bcb-be70ea61a5d7',
+      logistic_platform: 'ELOG',
+      courier_id: 'ef70a958-ad59-4d00-8d64-350b537ae25e',
+      customer_id: '2bfc5593-705b-4d21-9539-0d05226117e3',
+      customer_address: {
+        id: 'b842f6e2-712b-49e2-9f7c-1a36c7bc2b0f',
+        name: 'Rumah',
+        address:
+          'Jl. Pluit Selatan I Blok K No. 7, RT.1/RW.10, Pluit, Kec. Penjaringan, Jakarta Utara 14450',
+        location_latitude: -6.302862454540228,
+        location_longitude: 106.72258744050023,
+        address_detail: 'Lobby K Tower Alamanda',
+        postal_code: '12450',
+        created_at: '2022-11-03T09:19:16.456Z',
+        updated_at: '2022-11-03T09:19:16.456Z',
+        deleted_at: null,
+      },
+      delivery_type: 'DELIVERY',
+      orders: [
+        {
+          id: '56fe2fcb-34c2-4379-8936-e9c2b31213a1',
+          no: 'EF218',
+          store_id: 'a0e6fc6e-d64c-408d-a291-dcf2b698ab5b',
+          merchant_id: 'b0db71eb-0f30-49e2-bc3c-917285084e4c',
+          cart_payload: [
             {
-              name: ' handphone',
-              weight: 0,
+              uniqId: '01c6ad35-fa6b-4096-986e-5b809eb73f9d',
               quantity: 1,
-              price: 10000,
+              menu: {
+                id: '7213fa21-1976-4bb8-9cd2-ed4638195187',
+                photo:
+                  '/api/v1/orders/order/56fe2fcb-34c2-4379-8936-e9c2b31213a1/0/image/ice-cream-cone-0000.jpg',
+                name: 'Combo 1 Chicken ',
+                description: 'Combo 1 Chicken ',
+                status: 'ACTIVE',
+                recomendation: false,
+                merchant_id: 'b0db71eb-0f30-49e2-bc3c-917285084e4c',
+                sequence: null,
+                created_at: '2021-11-08 14:21:34',
+                updated_at: '2021-11-08 14:21:34',
+                store_avilability_id: null,
+                store_id: 'a0e6fc6e-d64c-408d-a291-dcf2b698ab5b',
+                menu_prices: [
+                  {
+                    id: '989cb403-af69-42a7-b3d1-6f058d945646',
+                    price: 20000,
+                    menu_category_prices: [
+                      {
+                        id: 'e8917220-dd11-414a-b772-7057adf7a2c4',
+                        name: 'DKI Jakarta',
+                      },
+                    ],
+                    menu_sales_channels: [
+                      {
+                        id: 'c1a089c7-5047-48fe-801e-2f65f0e87997',
+                        name: 'eFOOD',
+                        platform: 'ONLINE',
+                      },
+                    ],
+                  },
+                ],
+                variations: [],
+                stock_available: true,
+                discounted_price: null,
+                type: null,
+              },
+              storeAvilabiltyId: null,
+              variantSelected: [],
+              note: '',
+              price: 20000,
+              priceTotal: 20000,
+              addOns: [],
+              discounted_price: null,
+              totalPrice: 20000,
             },
           ],
         },
       ],
-      dropoff_destinations: [
-        {
-          longitude: store.location_latitude,
-          latitude: store.location_longitude,
-          contact_name: customer.name,
-          contact_phone: customer.phone,
-          address: 'jl mampang no 26',
-          address_name: customer.address_detail,
-          location_description: '',
-          note: '',
-        },
-      ],
-      price: 10000,
     };
-    return elogData;
-  }
-
-  async createMultipleOrder(data: any) {
-    if (data.delivery_type == 'DELIVERY') {
-      // GET DATA CUSTOMER
-      const customer = await this.getDataCustomer(data);
-
-      //** GET DATA STORE BY ID */
-      const store = await this.getDataStore(data);
-      console.log(customer['active_addresses'].location_latitude);
-
-      //** ELOG DATA */
-      const elogData = this.elogData(customer, store);
-      console.log(elogData);
-
-      //** ELOG SETTING */
-      await this.elogApisHandling(data, elogData);
-    }
+    return data;
   }
 
   async getDataCustomer(data: any) {
@@ -163,8 +261,6 @@ export class DeliveriesMultipleService {
         btoa(unescape(encodeURIComponent(elogUsername + ':' + elogPassword))),
     };
 
-    console.log(urlDeliveryElog);
-
     //** EXECUTE CREATE ORDER BY POST */
     const orderDelivery: any = await this.commonService
       .postHttp(urlDeliveryElog, elogData, headerRequest)
@@ -189,7 +285,6 @@ export class DeliveriesMultipleService {
       data: elogData,
       method: 'POST',
     };
-    console.log(request);
 
     //** SAVE ELOG DELIVERIES TO DELIVERIES ORDERS */
     this.thirdPartyRequestsRepository.save({
