@@ -71,9 +71,8 @@ export class DeliveriesMultipleService {
           longitude: store.location_longitude,
           address: store.address,
           address_name: store.name,
-          contact_phone_no:
-            '0' + store.phone.substring(2, parseInt(store.phone.length)),
-          contact_name: store.name.substring(0, 20),
+          contact_phone_no: store.phone,
+          contact_name: store.name,
           note: '',
           location_description: '',
           items: CartItems,
@@ -118,8 +117,7 @@ export class DeliveriesMultipleService {
           longitude: data.customer_address.location_longitude,
           latitude: data.customer_address.location_latitude,
           contact_name: customer.name,
-          contact_phone_no:
-            '0' + customer.phone.substring(2, customer.phone.length),
+          contact_phone_no: customer.phone,
           address: data.customer_address.address,
           address_name: data.customer_address.name,
           location_description: data.customer_address.address_detail,

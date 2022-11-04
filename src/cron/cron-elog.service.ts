@@ -125,6 +125,7 @@ export class CronElogService {
           status: [
             OrdersServiceStatus.Cancelled,
             OrdersServiceStatus.Delivered,
+            OrdersServiceStatus.Placed,
           ],
         })
         .getRawMany();
