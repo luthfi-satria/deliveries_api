@@ -83,7 +83,7 @@ export class CronElogService {
           });
 
           OrdersGroupsData.push({
-            group_id: reqData[Rows.id].order_id,
+            id: reqData[Rows.id].order_id,
             delivery_info: Rows,
             delivery_status: status.orderStatus,
           });
@@ -206,16 +206,18 @@ export class CronElogService {
         },
       };
 
-      const url = `${process.env.BASEURL_ORDERS_SERVICE}/api/v1/orders/internal/update-multipickup-orders`;
+      const url = `${process.env.BASEURL_ORDERS_SERVICE}/api/v1/orders/internal/update-multipickup-bulk`;
       const targetStatus = await firstValueFrom(
-        this.httpService.put(url, reqData, headerRequest).pipe(
-          map((resp) => resp.data),
-          catchError(() => {
-            throw new ForbiddenException(
-              `Order service: ${url} is not available`,
-            );
-          }),
-        ),
+        this.httpService
+          .put(url, { orders_orders_group: reqData }, headerRequest)
+          .pipe(
+            map((resp) => resp.data),
+            catchError(() => {
+              throw new ForbiddenException(
+                `Order service: ${url} is not available`,
+              );
+            }),
+          ),
       );
 
       return targetStatus;

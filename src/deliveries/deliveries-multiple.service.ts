@@ -145,7 +145,7 @@ export class DeliveriesMultipleService {
         order_id: data.id,
         response_payload: errContaint,
       };
-      this.saveNegativeResultOrder(deliveryData, errContaint);
+      await this.saveNegativeResultOrder(deliveryData, errContaint);
     }
     return customer;
   }
@@ -163,7 +163,7 @@ export class DeliveriesMultipleService {
         order_id: data.id,
         response_payload: errContaint,
       };
-      // this.saveNegativeResultOrder(deliveryData, errContaint);
+      await this.saveNegativeResultOrder(deliveryData, errContaint);
     }
     return store;
   }
@@ -186,18 +186,22 @@ export class DeliveriesMultipleService {
     //** EXECUTE CREATE ORDER BY POST */
     const orderDelivery: any = await this.commonService
       .postHttp(urlDeliveryElog, elogData, headerRequest)
-      .catch((err) => {
+      .catch(async (err) => {
         const deliveryData: Partial<OrdersDocument> = {
           order_id: data.group_id,
           status: OrdersStatus.DRIVER_NOT_FOUND,
           response_payload: err,
+          logistic_platform: data.logistic_platform,
         };
 
         //** BROADCAST */
-        this.natsService.clientEmit(`deliveries.order.failed`, deliveryData);
+        this.natsService.clientEmit(
+          `deliveries.order.multipickup.failed`,
+          deliveryData,
+        );
 
         //** IF ERROR */
-        this.saveNegativeResultOrder(deliveryData, err);
+        await this.saveNegativeResultOrder(deliveryData, err);
       });
 
     const headersData = {
@@ -257,26 +261,34 @@ export class DeliveriesMultipleService {
       ) {
         eventName = 'reordered';
       }
-      this.natsService.clientEmit(`deliveries.order.${eventName}`, getOrder);
+      this.natsService.clientEmit(
+        `deliveries.order.multipickup.${eventName}`,
+        getOrder,
+      );
     } else {
       const deliveryData: Partial<OrdersDocument> = {
         order_id: data.id,
         status: OrdersStatus.DRIVER_NOT_FOUND,
         response_payload: 'null',
+        logistic_platform: data.logistic_platform,
       };
 
       //broadcast
-      this.natsService.clientEmit(`deliveries.order.failed`, deliveryData);
+      this.natsService.clientEmit(
+        `deliveries.order.multipickup.failed`,
+        deliveryData,
+      );
 
-      this.saveNegativeResultOrder(deliveryData, 'null');
+      await this.saveNegativeResultOrder(deliveryData, 'null');
     }
   }
 
-  saveNegativeResultOrder(
+  async saveNegativeResultOrder(
     deliveryData: Partial<OrdersDocument>,
     errContaint: any,
   ) {
-    this.ordersRepository.save(deliveryData);
+    const test = await this.ordersRepository.save(deliveryData);
+    console.log(test);
 
     throw new BadRequestException(
       this.responseService.error(
