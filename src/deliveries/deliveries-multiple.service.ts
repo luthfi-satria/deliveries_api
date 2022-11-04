@@ -71,8 +71,9 @@ export class DeliveriesMultipleService {
           longitude: store.location_longitude,
           address: store.address,
           address_name: store.name,
-          contact_phone_no: store.phone,
-          contact_name: store.name,
+          contact_phone_no:
+            '0' + store.phone.substring(2, parseInt(store.phone.length)),
+          contact_name: store.name.substring(0, 20),
           note: '',
           location_description: '',
           items: CartItems,
@@ -114,10 +115,11 @@ export class DeliveriesMultipleService {
       pickup_destinations: [],
       dropoff_destinations: [
         {
-          longitude: data.customer_address.location_latitude,
-          latitude: data.customer_address.location_longitude,
+          longitude: data.customer_address.location_longitude,
+          latitude: data.customer_address.location_latitude,
           contact_name: customer.name,
-          contact_phone: customer.phone,
+          contact_phone_no:
+            '0' + customer.phone.substring(2, customer.phone.length),
           address: data.customer_address.address,
           address_name: data.customer_address.name,
           location_description: data.customer_address.address_detail,
@@ -167,49 +169,45 @@ export class DeliveriesMultipleService {
   }
 
   async elogApisHandling(data, elogData) {
-    try {
-      const elogSettings = await this.getElogSettings();
-      const elogUrl = elogSettings['elog_api_url'][0];
-      const elogUsername = elogSettings['elog_username'][0];
-      const elogPassword = elogSettings['elog_password'][0];
+    const elogSettings = await this.getElogSettings();
+    const elogUrl = elogSettings['elog_api_url'][0];
+    const elogUsername = elogSettings['elog_username'][0];
+    const elogPassword = elogSettings['elog_password'][0];
 
-      //** EXECUTE CREATE ORDER BY POST */
-      const urlDeliveryElog = `${elogUrl}/openapi/v0/order/send`;
-      const headerRequest = {
-        'Content-Type': 'application/json',
-        Authorization:
-          'basic ' +
-          btoa(unescape(encodeURIComponent(elogUsername + ':' + elogPassword))),
-      };
+    //** EXECUTE CREATE ORDER BY POST */
+    const urlDeliveryElog = `${elogUrl}/openapi/v0/order/send`;
+    const headerRequest = {
+      'Content-Type': 'application/json',
+      Authorization:
+        'basic ' +
+        btoa(unescape(encodeURIComponent(elogUsername + ':' + elogPassword))),
+    };
 
-      //** EXECUTE CREATE ORDER BY POST */
-      const orderDelivery: any = await this.commonService
-        .postHttp(urlDeliveryElog, elogData, headerRequest)
-        .catch((err) => {
-          const deliveryData: Partial<OrdersDocument> = {
-            order_id: data.group_id,
-            status: OrdersStatus.DRIVER_NOT_FOUND,
-            response_payload: err,
-          };
+    //** EXECUTE CREATE ORDER BY POST */
+    const orderDelivery: any = await this.commonService
+      .postHttp(urlDeliveryElog, elogData, headerRequest)
+      .catch((err) => {
+        const deliveryData: Partial<OrdersDocument> = {
+          order_id: data.group_id,
+          status: OrdersStatus.DRIVER_NOT_FOUND,
+          response_payload: err,
+        };
 
-          //** BROADCAST */
-          this.natsService.clientEmit(`deliveries.order.failed`, deliveryData);
+        //** BROADCAST */
+        this.natsService.clientEmit(`deliveries.order.failed`, deliveryData);
 
-          //** IF ERROR */
-          this.saveNegativeResultOrder(deliveryData, err);
-        });
+        //** IF ERROR */
+        this.saveNegativeResultOrder(deliveryData, err);
+      });
 
-      const headersData = {
-        headerRequest: headerRequest,
-        url: urlDeliveryElog,
-      };
+    const headersData = {
+      headerRequest: headerRequest,
+      url: urlDeliveryElog,
+    };
 
-      await this.saveToThirdPartyRequest(headersData, elogData, orderDelivery);
+    await this.saveToThirdPartyRequest(headersData, elogData, orderDelivery);
 
-      await this.saveToDeliveryOrders(orderDelivery, data);
-    } catch (error) {
-      throw error;
-    }
+    await this.saveToDeliveryOrders(orderDelivery, data);
   }
 
   async saveToThirdPartyRequest(headersData, elogData, orderDelivery) {
@@ -239,6 +237,7 @@ export class DeliveriesMultipleService {
         response_payload: orderDelivery,
         status: OrdersStatus.FINDING_DRIVER,
         service_status: orderDelivery.status,
+        logistic_platform: data.logistic_platform,
       };
       const order = await this.ordersRepository.save(deliveryData);
       const historyData: Partial<OrderHistoriesDocument> = {
@@ -273,7 +272,7 @@ export class DeliveriesMultipleService {
     }
   }
 
-  async saveNegativeResultOrder(
+  saveNegativeResultOrder(
     deliveryData: Partial<OrdersDocument>,
     errContaint: any,
   ) {

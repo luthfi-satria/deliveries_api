@@ -25,7 +25,7 @@ export class CronElogService {
   /**
    *
    */
-  @Cron('60 * * * * *')
+  @Cron('*/1 * * * *')
   async retrieveElogStatus() {
     this.logger.log('---- STARTING CRON JOBS -----');
     await this.updateElogStatus();
