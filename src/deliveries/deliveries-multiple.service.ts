@@ -8,6 +8,7 @@ import { CommonService } from 'src/common/common.service';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import {
   OrdersDocument,
+  OrdersServiceStatus,
   OrdersStatus,
 } from 'src/database/entities/orders.entity';
 import { ResponseService } from 'src/response/response.service';
@@ -16,6 +17,12 @@ import { MessageService } from 'src/message/message.service';
 import { NatsService } from 'src/common/nats/nats/nats.service';
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { unescape } from 'querystring';
+import {
+  OrderHistoriesDocument,
+  OrderHistoriesServiceStatus,
+  OrderHistoriesStatus,
+} from 'src/database/entities/orders-history.entity';
+import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
 
 @Injectable()
 export class DeliveriesMultipleService {
@@ -27,12 +34,13 @@ export class DeliveriesMultipleService {
     private readonly messageService: MessageService,
     private readonly natsService: NatsService,
     private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
+    private readonly orderHistoriesRepository: OrderHistoriesRepository,
   ) {}
 
   logger = new Logger();
 
   async createMultipleOrder(data: any) {
-    data = await this.orderData();
+    data = await this.dummyBroadcast();
     if (data.delivery_type == 'DELIVERY') {
       // GET DATA CUSTOMER
       this.logger.log('PREPARE GET CUSTOMER DATA');
@@ -65,8 +73,8 @@ export class DeliveriesMultipleService {
           longitude: store.location_longitude,
           address: store.address,
           address_name: store.name,
-          contact_phone_no: '08872373723', // hanya dapat phone?
-          contact_name: 'Richesse....', // maksimal hanya 20 karakter saja?
+          contact_phone_no: store.phone,
+          contact_name: store.name,
           note: '',
           location_description: '',
           items: CartItems,
@@ -80,7 +88,6 @@ export class DeliveriesMultipleService {
       return elogData;
     }
   }
-
   //** GET SETUP ELOG */
   async getElogSettings() {
     try {
@@ -109,28 +116,197 @@ export class DeliveriesMultipleService {
       pickup_destinations: [],
       dropoff_destinations: [
         {
-          latitude: customer.active_addresses[0].location_latitude,
-          longitude: customer.active_addresses[0].location_longitude,
-          address: customer.active_addresses[0].address,
-          address_name: customer.active_addresses[0].name,
-          contact_phone_no: customer.phone,
+          longitude: data.customer_address.location_longitude,
+          latitude: data.customer_address.location_latitude,
           contact_name: customer.name,
+          contact_phone_no: customer.phone,
+          address: data.customer_address.address,
+          address_name: data.customer_address.name,
+          location_description: data.customer_address.address_detail,
           note: '',
-          location_description: customer.active_addresses[0].address_detail,
         },
       ],
       price: 'price' in data ? data.price : 0,
     };
-    console.log(elogData);
     return elogData;
   }
 
-  orderData() {
-    const data = {
+  async getDataCustomer(data: any) {
+    //** GET DATA CUSTOMER BY ID */
+    const url = `${process.env.BASEURL_CUSTOMERS_SERVICE}/api/v1/internal/customers/${data.customer_id}`;
+    const customer: any = await this.commonService.getHttp(url);
+    if (!customer) {
+      const errContaint: any = {
+        value: data.customer_id,
+        property: 'customer_id',
+        constraint: ['Customer Id tidak ditemukan.'],
+      };
+      const deliveryData: Partial<OrdersDocument> = {
+        order_id: data.id,
+        response_payload: errContaint,
+      };
+      await this.saveNegativeResultOrder(deliveryData, errContaint);
+    }
+    return customer;
+  }
+
+  async getDataStore(data: any) {
+    const urlStore = `${process.env.BASEURL_MERCHANTS_SERVICE}/api/v1/internal/merchants/stores/${data.store_id}`;
+    const store: any = this.commonService.getHttp(urlStore);
+    if (!store) {
+      const errContaint: any = {
+        value: data.store_id,
+        property: 'store_id',
+        constraint: ['Store Id tidak ditemukan.'],
+      };
+      const deliveryData: Partial<OrdersDocument> = {
+        order_id: data.id,
+        response_payload: errContaint,
+      };
+      await this.saveNegativeResultOrder(deliveryData, errContaint);
+    }
+    return store;
+  }
+
+  async elogApisHandling(data, elogData) {
+    const elogSettings = await this.getElogSettings();
+    const elogUrl = elogSettings['elog_api_url'][0];
+    const elogUsername = elogSettings['elog_username'][0];
+    const elogPassword = elogSettings['elog_password'][0];
+
+    //** EXECUTE CREATE ORDER BY POST */
+    const urlDeliveryElog = `${elogUrl}/openapi/v0/order/send`;
+    const headerRequest = {
+      'Content-Type': 'application/json',
+      Authorization:
+        'basic ' +
+        btoa(unescape(encodeURIComponent(elogUsername + ':' + elogPassword))),
+    };
+
+    //** EXECUTE CREATE ORDER BY POST */
+    const orderDelivery: any = await this.commonService
+      .postHttp(urlDeliveryElog, elogData, headerRequest)
+      .catch(async (err) => {
+        const deliveryData: Partial<OrdersDocument> = {
+          order_id: data.group_id,
+          status: OrdersStatus.DRIVER_NOT_FOUND,
+          response_payload: err,
+          //logistic_platform: data.logistic_platform,
+        };
+
+        //** BROADCAST */
+        this.natsService.clientEmit(
+          `deliveries.order.multipickup.failed`,
+          deliveryData,
+        );
+
+        //** IF ERROR */
+        await this.saveNegativeResultOrder(deliveryData, err);
+      });
+
+    const headersData = {
+      headerRequest: headerRequest,
+      url: urlDeliveryElog,
+    };
+
+    await this.saveToThirdPartyRequest(headersData, elogData, orderDelivery);
+
+    await this.saveToDeliveryOrders(orderDelivery, data);
+  }
+
+  async saveToThirdPartyRequest(headersData, elogData, orderDelivery) {
+    //** EXECUTE CREATE ORDER BY POST */
+    const request = {
+      header: headersData.headerRequest,
+      url: headersData.url,
+      data: elogData,
+      method: 'POST',
+    };
+    console.log(request);
+
+    //** SAVE ELOG DELIVERIES TO DELIVERIES ORDERS */
+    this.thirdPartyRequestsRepository.save({
+      request,
+      response: orderDelivery,
+      code: orderDelivery.id,
+    });
+  }
+
+  async saveToDeliveryOrders(orderDelivery, data) {
+    if (orderDelivery) {
+      const deliveryData: Partial<OrdersDocument> = {
+        order_id: data.id,
+        delivery_id: orderDelivery.id,
+        price: orderDelivery.price,
+        response_payload: orderDelivery,
+        status: OrdersStatus.FINDING_DRIVER,
+        service_status: orderDelivery.status,
+        //logistic_platform: data.logistic_platform,
+      };
+      const order = await this.ordersRepository.save(deliveryData);
+      const historyData: Partial<OrderHistoriesDocument> = {
+        order_id: order.id,
+        status: OrderHistoriesStatus.FINDING_DRIVER,
+        service_status: orderDelivery.status,
+      };
+
+      await this.orderHistoriesRepository.save(historyData);
+      const getOrder = await this.ordersRepository.findOne(order.id, {
+        relations: ['histories'],
+      });
+
+      //broadcast
+      let eventName = orderDelivery.status;
+      if (
+        data.delivery_status == 'CANCELLED' ||
+        data.delivery_status == 'DRIVER_NOT_FOUND'
+      ) {
+        eventName = 'reordered';
+      }
+      this.natsService.clientEmit(
+        `deliveries.order.multipickup.${eventName}`,
+        getOrder,
+      );
+    } else {
+      const deliveryData: Partial<OrdersDocument> = {
+        order_id: data.id,
+        status: OrdersStatus.DRIVER_NOT_FOUND,
+        response_payload: 'null',
+        //logistic_platform: data.logistic_platform,
+      };
+
+      //broadcast
+      this.natsService.clientEmit(
+        `deliveries.order.multipickup.failed`,
+        deliveryData,
+      );
+
+      await this.saveNegativeResultOrder(deliveryData, 'null');
+    }
+  }
+
+  async saveNegativeResultOrder(
+    deliveryData: Partial<OrdersDocument>,
+    errContaint: any,
+  ) {
+    const test = await this.ordersRepository.save(deliveryData);
+    console.log(test);
+
+    throw new BadRequestException(
+      this.responseService.error(
+        HttpStatus.BAD_REQUEST,
+        errContaint,
+        'Bad Request',
+      ),
+    );
+  }
+
+  async dummyBroadcast() {
+    const dummy = {
       group_id: 'de2af395-c500-4ece-8bcb-be70ea61a5d7',
       logistic_platform: 'ELOG',
       courier_id: 'ef70a958-ad59-4d00-8d64-350b537ae25e',
-      customer_id: '2bfc5593-705b-4d21-9539-0d05226117e3',
+      customer_id: '53ca9038-0a27-4fd1-b786-bb77e07b63ed',
       customer_address: {
         id: 'b842f6e2-712b-49e2-9f7c-1a36c7bc2b0f',
         name: 'Rumah',
@@ -205,107 +381,8 @@ export class DeliveriesMultipleService {
           ],
         },
       ],
+      price: 20000,
     };
-    return data;
-  }
-
-  async getDataCustomer(data: any) {
-    //** GET DATA CUSTOMER BY ID */
-    const url = `${process.env.BASEURL_CUSTOMERS_SERVICE}/api/v1/internal/customers/${data.customer_id}`;
-    const customer: any = await this.commonService.getHttp(url);
-    if (!customer) {
-      const errContaint: any = {
-        value: data.customer_id,
-        property: 'customer_id',
-        constraint: ['Customer Id tidak ditemukan.'],
-      };
-      const deliveryData: Partial<OrdersDocument> = {
-        order_id: data.id,
-        response_payload: errContaint,
-      };
-      this.saveNegativeResultOrder(deliveryData, errContaint);
-    }
-    return customer;
-  }
-
-  async getDataStore(data: any) {
-    const urlStore = `${process.env.BASEURL_MERCHANTS_SERVICE}/api/v1/internal/merchants/stores/${data.store_id}`;
-    const store: any = await this.commonService.getHttp(urlStore);
-    if (!store) {
-      const errContaint: any = {
-        value: data.store_id,
-        property: 'store_id',
-        constraint: ['Store Id tidak ditemukan.'],
-      };
-      const deliveryData: Partial<OrdersDocument> = {
-        order_id: data.id,
-        response_payload: errContaint,
-      };
-      this.saveNegativeResultOrder(deliveryData, errContaint);
-    }
-    return store;
-  }
-
-  async elogApisHandling(data, elogData) {
-    const elogSettings = await this.getElogSettings();
-    const elogUrl = elogSettings['elog_api_url'][0];
-    const elogUsername = elogSettings['elog_username'][0];
-    const elogPassword = elogSettings['elog_password'][0];
-
-    //** EXECUTE CREATE ORDER BY POST */
-    const urlDeliveryElog = `${elogUrl}/openapi/v0/order/send`;
-    const headerRequest = {
-      'Content-Type': 'application/json',
-      Authorization:
-        'basic ' +
-        btoa(unescape(encodeURIComponent(elogUsername + ':' + elogPassword))),
-    };
-
-    //** EXECUTE CREATE ORDER BY POST */
-    const orderDelivery: any = await this.commonService
-      .postHttp(urlDeliveryElog, elogData, headerRequest)
-      .catch((err) => {
-        const deliveryData: Partial<OrdersDocument> = {
-          order_id: data.id,
-          status: OrdersStatus.DRIVER_NOT_FOUND,
-          response_payload: err,
-        };
-
-        //** BROADCAST */
-        this.natsService.clientEmit(`deliveries.order.failed`, deliveryData);
-
-        //** IF ERROR */
-        this.saveNegativeResultOrder(deliveryData, err);
-      });
-
-    //** EXECUTE CREATE ORDER BY POST */
-    const request = {
-      header: headerRequest,
-      url: urlDeliveryElog,
-      data: elogData,
-      method: 'POST',
-    };
-
-    //** SAVE ELOG DELIVERIES TO DELIVERIES ORDERS */
-    this.thirdPartyRequestsRepository.save({
-      request,
-      response: orderDelivery,
-      code: orderDelivery.id,
-    });
-  }
-
-  async saveNegativeResultOrder(
-    deliveryData: Partial<OrdersDocument>,
-    errContaint: any,
-  ) {
-    this.ordersRepository.save(deliveryData);
-
-    throw new BadRequestException(
-      this.responseService.error(
-        HttpStatus.BAD_REQUEST,
-        errContaint,
-        'Bad Request',
-      ),
-    );
+    return dummy;
   }
 }
