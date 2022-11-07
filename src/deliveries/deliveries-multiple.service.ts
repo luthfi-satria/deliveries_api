@@ -88,6 +88,7 @@ export class DeliveriesMultipleService {
       return elogData;
     }
   }
+
   //** GET SETUP ELOG */
   async getElogSettings() {
     try {
