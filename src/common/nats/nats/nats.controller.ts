@@ -11,13 +11,6 @@ export class NatsController {
     private readonly deliveriesService: DeliveriesService,
     private readonly deliveriesMultipleService: DeliveriesMultipleService,
   ) {}
-  //** Handling Deliveries Elog */
-  // @EventPattern('orders.mutiple.order.accepted')
-  // async saveEfoodMultiple(@Payload() data: any) {
-  //   this.logger.log('orders.mutiple.order.accepted');
-  //   // console.log('data: ', data);
-  //   this.deliveriesMultipleService.createMultipleOrder(data);
-  // }
 
   @EventPattern('orders.order.accepted')
   async saveMenuEfood(@Payload() data: any) {
@@ -31,5 +24,20 @@ export class NatsController {
     this.logger.log('orders.delivery.reordered');
     data.delivery_status = 'DRIVER_NOT_FOUND';
     this.deliveriesService.createOrder(data);
+  }
+
+  //** Handling Multipickup order Elog */
+  @EventPattern('orders.multiple.order.accepted')
+  async saveEfoodMultipickup(@Payload() data: any) {
+    this.logger.log('orders.multiple.order.accepted');
+    this.deliveriesMultipleService.createMultipleOrder(data);
+  }
+
+  //** Deliveries Multipickup Elog Reordered */
+  @EventPattern('orders.multiple.order.reordered')
+  async deliveryReorderedMultipickup(@Payload() data: any) {
+    this.logger.log('orders.multiple.order.reordered');
+    data.delivery_status = 'DRIVER_NOT_FOUND';
+    this.deliveriesMultipleService.createMultipleOrder(data);
   }
 }

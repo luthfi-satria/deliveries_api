@@ -39,9 +39,34 @@ export class DeliveriesController {
     }
   }
 
+  @Delete('orders/multipickup/:oid')
+  @UserTypeAndLevel(
+    'admin.*',
+    'merchant.group',
+    'merchant.merchant',
+    'merchant.store',
+  )
+  @AuthJwtGuard()
+  @ResponseStatusCode()
+  async deleteMultipleOrder(
+    @Param('oid') order_id: string,
+  ): Promise<RSuccessMessage> {
+    try {
+      await this.deliveriesMultipleService.cancelMultipleOrder(order_id);
+      return this.responseService.success(
+        true,
+        this.messageService.get('delivery.general.success'),
+      );
+    } catch (errList) {
+      console.error(errList);
+      throw errList;
+    }
+  }
+
   @Post('/testing-elog')
   @ResponseStatusCode()
   async testElog(@Body() data: any): Promise<any> {
+    // this.deliveriesMultipleService.dummyBroadcast();
     await this.deliveriesMultipleService.createMultipleOrder(data);
     return this.responseService.success(
       true,

@@ -8,6 +8,7 @@ import { CommonService } from 'src/common/common.service';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import {
   OrdersDocument,
+  OrdersServiceStatus,
   OrdersStatus,
 } from 'src/database/entities/orders.entity';
 import { ResponseService } from 'src/response/response.service';
@@ -18,6 +19,7 @@ import { ThirdPartyRequestsRepository } from 'src/database/repository/third-part
 import { unescape } from 'querystring';
 import {
   OrderHistoriesDocument,
+  OrderHistoriesServiceStatus,
   OrderHistoriesStatus,
 } from 'src/database/entities/orders-history.entity';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
@@ -38,7 +40,7 @@ export class DeliveriesMultipleService {
   logger = new Logger();
 
   async createMultipleOrder(data: any) {
-    data = await this.dummyBroadcast();
+    this.logger.log(data, 'PREPARE CREATE MULTIPLE ORDER');
     if (data.delivery_type == 'DELIVERY') {
       // GET DATA CUSTOMER
       this.logger.log('PREPARE GET CUSTOMER DATA');
@@ -142,6 +144,7 @@ export class DeliveriesMultipleService {
       const deliveryData: Partial<OrdersDocument> = {
         order_id: data.id,
         response_payload: errContaint,
+        logistic_platform: 'ELOG',
       };
       await this.saveNegativeResultOrder(deliveryData, errContaint);
     }
@@ -160,6 +163,7 @@ export class DeliveriesMultipleService {
       const deliveryData: Partial<OrdersDocument> = {
         order_id: data.id,
         response_payload: errContaint,
+        logistic_platform: 'ELOG',
       };
       await this.saveNegativeResultOrder(deliveryData, errContaint);
     }
@@ -194,7 +198,7 @@ export class DeliveriesMultipleService {
 
         //** BROADCAST */
         this.natsService.clientEmit(
-          `deliveries.order.multipickup.failed`,
+          `deliveries.multiple.order.failed`,
           deliveryData,
         );
 
@@ -239,6 +243,7 @@ export class DeliveriesMultipleService {
         response_payload: orderDelivery,
         status: OrdersStatus.FINDING_DRIVER,
         service_status: orderDelivery.status,
+        tracking_url: orderDelivery.tracking_url,
         logistic_platform: data.logistic_platform,
       };
       const order = await this.ordersRepository.save(deliveryData);
@@ -260,7 +265,7 @@ export class DeliveriesMultipleService {
         eventName = 'reordered';
       }
       this.natsService.clientEmit(
-        `deliveries.order.multipickup.${eventName}`,
+        `deliveries.multiple.order.${eventName}`,
         getOrder,
       );
     } else {
@@ -273,7 +278,7 @@ export class DeliveriesMultipleService {
 
       //broadcast
       this.natsService.clientEmit(
-        `deliveries.order.multipickup.failed`,
+        `deliveries.multiple.order.failed`,
         deliveryData,
       );
 
@@ -297,7 +302,87 @@ export class DeliveriesMultipleService {
     );
   }
 
-  async dummyBroadcast() {
+  async cancelMultipleOrder(order_id: string): Promise<any> {
+    const orderDelivery = await this.ordersRepository.findOne({
+      where: { order_id: order_id, status: 'FINDING_DRIVER' },
+    });
+    if (!orderDelivery) {
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: order_id,
+            property: 'order_id',
+            constraint: [
+              this.messageService.get('delivery.general.idNotFound'),
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+    const elogSettings = await this.getElogSettings();
+    const elogUrl = elogSettings['elog_api_url'][0];
+    const elogUsername = elogSettings['elog_username'][0];
+    const elogPassword = elogSettings['elog_password'][0];
+
+    //** EXECUTE CREATE ORDER BY POST */
+    const urlDeliveryElog = `${elogUrl}/openapi/v0/order/send`;
+    const headerRequest = {
+      'Content-Type': 'application/json',
+      Authorization:
+        'basic ' +
+        btoa(unescape(encodeURIComponent(elogUsername + ':' + elogPassword))),
+    };
+    const data = {
+      cancel_reason: 'Permintaan store',
+    };
+    const cancelOrderDelivery: any = await this.commonService
+      .deleteHttp(urlDeliveryElog, data, headerRequest)
+      .catch((err1) => {
+        console.error(err1);
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            {
+              value: order_id,
+              property: 'order_id',
+              constraint: [err1.error],
+            },
+            'Bad Request',
+          ),
+        );
+      });
+    const request = {
+      header: headerRequest,
+      url: urlDeliveryElog,
+      data: data,
+      method: 'DELETE',
+    };
+    this.thirdPartyRequestsRepository.save({
+      request,
+      response: cancelOrderDelivery,
+      code: order_id,
+    });
+
+    const orderHistory: Partial<OrderHistoriesDocument> = {
+      order_id: orderDelivery.id,
+      status: OrderHistoriesStatus.CANCELLED,
+      service_status: OrderHistoriesServiceStatus.Cancelled,
+    };
+    await this.orderHistoriesRepository.save(orderHistory);
+
+    orderDelivery.status = OrdersStatus.CANCELLED;
+    orderDelivery.service_status = OrdersServiceStatus.Cancelled;
+    const order = await this.ordersRepository.save(orderDelivery);
+
+    //broadcast
+    this.natsService.clientEmit(`deliveries.multiple.order.cancelled`, order);
+
+    return cancelOrderDelivery;
+  }
+
+  dummyBroadcast() {
     const dummy = {
       group_id: 'de2af395-c500-4ece-8bcb-be70ea61a5d7',
       logistic_platform: 'ELOG',
@@ -379,6 +464,7 @@ export class DeliveriesMultipleService {
       ],
       price: 20000,
     };
+    this.natsService.clientEmit(`orders.multiple.order.accepted`, dummy);
     return dummy;
   }
 }
