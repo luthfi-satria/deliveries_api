@@ -35,7 +35,7 @@
     "@nestjs/passport": "^8.0.0",
     "@nestjs/platform-express": "^8.2.2",
     "@nestjs/schedule": "^2.1.0",
-    "@nestjs/typeorm": "^8.0.1",
+    "@nestjs/typeorm": "8.0.2",
     "@slynova/flydrive": "^1.0.3",
     "@slynova/flydrive-s3": "^1.0.3",
     "@types/cron": "^2.0.0",
