@@ -17,7 +17,8 @@ import { CourierRepository } from 'src/database/repository/couriers.repository';
 import { RMessage } from 'src/response/response.interface';
 import { SettingService } from 'src/setting/setting.service';
 import { CreateAutoSyncDeliveryDto } from 'src/common/redis/dto/redis-delivery.dto';
-import { SettingsDocument } from 'src/database/entities/settings.entity';
+// import { SettingsDocument } from 'src/database/entities/settings.entity';
+import { Not } from 'typeorm';
 
 @Injectable()
 export class CouriersService {
@@ -95,7 +96,7 @@ export class CouriersService {
             ),
           );
         });
-
+      console.log(count);
       let itemsWithInfos: any[] = [];
       if (isIncludePrice && items.length) {
         const CourierCodesObj: any = {};
@@ -300,7 +301,11 @@ export class CouriersService {
           save;
       });
 
-      const couriers = await this.courierRepository.find();
+      const couriers = await this.courierRepository.find({
+        where: {
+          code: Not('elog'),
+        },
+      });
 
       couriers.forEach((courier: any) => {
         if (!courierIndex[courier.code + courier.service_code]) {
