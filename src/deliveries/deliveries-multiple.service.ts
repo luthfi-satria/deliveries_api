@@ -256,6 +256,7 @@ export class DeliveriesMultipleService {
       const getOrder = await this.ordersRepository.findOne(order.id, {
         relations: ['histories'],
       });
+
       //broadcast
       let eventName = orderDelivery.status;
       if (

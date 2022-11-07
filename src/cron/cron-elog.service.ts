@@ -60,6 +60,7 @@ export class CronElogService {
     const result = {};
     if (multipickupData.length > 0 && reqData) {
       // check status pada elog APIS
+      console.log(reqData);
       this.logger.log('CRON JOBS::COMMUNICATING WITH ELOG APIs');
       const elogResponse = await this.callElogAPIS(Object.keys(reqData));
       console.log(elogResponse);
@@ -77,7 +78,7 @@ export class CronElogService {
           });
 
           DeliveryHistory.push({
-            order_id: reqData[Rows.id].order_id,
+            order_id: reqData[Rows.id].id,
             status: status.orderStatus,
             service_status: status.deliveryStatus,
           });
@@ -86,6 +87,9 @@ export class CronElogService {
             id: reqData[Rows.id].order_id,
             delivery_info: Rows,
             delivery_status: status.orderStatus,
+            delivery_driver_name: reqData[Rows.id].driver_name,
+            delivery_driver_phone: reqData[Rows.id].driver_phone,
+            delivery_tracking_url: reqData[Rows.id].tracking_url,
           });
         });
 
@@ -119,7 +123,14 @@ export class CronElogService {
     try {
       const DelivOrderData = await this.deliveryRepo
         .createQueryBuilder()
-        .select(['id', 'order_id', 'delivery_id'])
+        .select([
+          'id',
+          'order_id',
+          'delivery_id',
+          'driver_name',
+          'driver_phone',
+          'tracking_url',
+        ])
         .where('logistic_platform = :platform', { platform: 'ELOG' })
         .andWhere('service_status NOT IN (:...status)', {
           status: [
