@@ -306,14 +306,14 @@ export class DeliveriesMultipleService {
       group_id: 'de2af395-c500-4ece-8bcb-be70ea61a5d7',
       logistic_platform: 'ELOG',
       courier_id: 'ef70a958-ad59-4d00-8d64-350b537ae25e',
-      customer_id: '53ca9038-0a27-4fd1-b786-bb77e07b63ed',
+      customer_id: 'f364f4cc-6934-4c83-a156-f00b8bcd3ba6',
       customer_address: {
-        id: 'b842f6e2-712b-49e2-9f7c-1a36c7bc2b0f',
-        name: 'Rumah',
+        id: '044978cf-2acd-4242-b840-82c582e2fbcb',
+        name: 'Unnamed Road',
         address:
-          'Jl. Pluit Selatan I Blok K No. 7, RT.1/RW.10, Pluit, Kec. Penjaringan, Jakarta Utara 14450',
-        location_latitude: -6.302862454540228,
-        location_longitude: 106.72258744050023,
+          'Unnamed Road, Margaasih, Kec. Margaasih, Kabupaten Bandung, Jawa Barat 40215, Indonesia',
+        location_latitude: -6.934957543106043,
+        location_longitude: 107.55019046366215,
         address_detail: 'Lobby K Tower Alamanda',
         postal_code: '12450',
         created_at: '2022-11-03T09:19:16.456Z',
@@ -325,39 +325,97 @@ export class DeliveriesMultipleService {
         {
           id: '56fe2fcb-34c2-4379-8936-e9c2b31213a1',
           no: 'EF218',
-          store_id: 'a0e6fc6e-d64c-408d-a291-dcf2b698ab5b',
-          merchant_id: 'b0db71eb-0f30-49e2-bc3c-917285084e4c',
+          store_id: '310cf510-028e-4821-a919-d5fc54201ceb',
+          merchant_id: '87e9af68-8f23-4697-b900-ac2ac380795c',
           cart_payload: [
             {
               uniqId: '01c6ad35-fa6b-4096-986e-5b809eb73f9d',
               quantity: 1,
               menu: {
-                id: '7213fa21-1976-4bb8-9cd2-ed4638195187',
+                id: 'b0bf901c-dad4-4713-a54c-87706d6da9d8',
                 photo:
-                  '/api/v1/orders/order/56fe2fcb-34c2-4379-8936-e9c2b31213a1/0/image/ice-cream-cone-0000.jpg',
-                name: 'Combo 1 Chicken ',
-                description: 'Combo 1 Chicken ',
+                  'https://dummyimage.com/600x600/827b82/ffffff&text=Photo+Menu',
+                name: 'Paket nasi ayam',
+                description: null,
                 status: 'ACTIVE',
                 recomendation: false,
-                merchant_id: 'b0db71eb-0f30-49e2-bc3c-917285084e4c',
+                merchant_id: '87e9af68-8f23-4697-b900-ac2ac380795c',
                 sequence: null,
-                created_at: '2021-11-08 14:21:34',
-                updated_at: '2021-11-08 14:21:34',
+                created_at: '2022-07-20 14:56:40',
+                updated_at: '2022-07-20 14:56:40',
                 store_avilability_id: null,
-                store_id: 'a0e6fc6e-d64c-408d-a291-dcf2b698ab5b',
+                store_id: '310cf510-028e-4821-a919-d5fc54201ceb',
                 menu_prices: [
                   {
-                    id: '989cb403-af69-42a7-b3d1-6f058d945646',
-                    price: 20000,
+                    id: '15196377-c185-420a-8201-7af82eedad36',
+                    price: 25000,
                     menu_category_prices: [
                       {
-                        id: 'e8917220-dd11-414a-b772-7057adf7a2c4',
-                        name: 'DKI Jakarta',
+                        id: 'a675d452-89bf-4f3f-9a43-68da93075317',
+                        name: 'Kategori 1',
                       },
                     ],
                     menu_sales_channels: [
                       {
-                        id: 'c1a089c7-5047-48fe-801e-2f65f0e87997',
+                        id: '9384fa74-6dab-484e-ba6a-751a67e69013',
+                        name: 'eFOOD',
+                        platform: 'ONLINE',
+                      },
+                    ],
+                  },
+                ],
+                variations: [],
+                stock_available: true,
+                discounted_price: null,
+                type: null,
+              },
+              storeAvilabiltyId: null,
+              variantSelected: [],
+              note: '',
+              price: 20000,
+              priceTotal: 20000,
+              addOns: [],
+              discounted_price: null,
+              totalPrice: 20000,
+            },
+          ],
+        },
+        {
+          id: '56fe2fcb-34c2-4379-8936-e9c2b31213a2',
+          no: 'EF219',
+          store_id: '0b5115a6-0f3e-4f7d-95c3-6ee40743739b',
+          merchant_id: 'c37588f9-3dfb-4e44-88da-b2bbe1ac3a8b',
+          cart_payload: [
+            {
+              uniqId: '01c6ad35-fa6b-4096-986e-5b809eb73f9d',
+              quantity: 1,
+              menu: {
+                id: '476665e9-bc17-48a9-8a1b-702189af0937',
+                photo:
+                  'https://s3.ap-southeast-1.amazonaws.com/efood-production/upload_menus/1660750045784-image.png',
+                name: 'Vietnamese Chicken',
+                description: null,
+                status: 'ACTIVE',
+                recomendation: false,
+                merchant_id: 'c37588f9-3dfb-4e44-88da-b2bbe1ac3a8b',
+                sequence: 12,
+                created_at: '2022-08-17 22:27:25',
+                updated_at: '2022-09-11 19:34:36',
+                store_avilability_id: null,
+                store_id: '0b5115a6-0f3e-4f7d-95c3-6ee40743739b',
+                menu_prices: [
+                  {
+                    id: '2faba88e-0bc6-48cb-aab8-ecfb63fded03',
+                    price: 60500,
+                    menu_category_prices: [
+                      {
+                        id: '1c85b1d0-cc44-49e7-8a3a-885b628b46c6',
+                        name: 'Kategori 1',
+                      },
+                    ],
+                    menu_sales_channels: [
+                      {
+                        id: '63d45d11-ae4e-4af7-bc1c-a99620435c37',
                         name: 'eFOOD',
                         platform: 'ONLINE',
                       },
