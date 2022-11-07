@@ -96,7 +96,7 @@ export class CouriersService {
             ),
           );
         });
-
+      console.log(count);
       let itemsWithInfos: any[] = [];
       if (isIncludePrice && items.length) {
         const CourierCodesObj: any = {};

@@ -23,7 +23,7 @@ export class CallbacksController {
 
   @Get('callbacks/biteship-order-status')
   @HttpCode(200)
-  async biteshipOrderStatusCheck(@Body() data: any) {
+  async biteshipOrderStatusCheck() {
     return 'ok';
   }
 }

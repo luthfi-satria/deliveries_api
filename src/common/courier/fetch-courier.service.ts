@@ -77,7 +77,12 @@ export class FetchCourierService {
           }),
         );
       const response = await firstValueFrom(get_request);
-      const request = { header: headerRequest, url, body: data, method: "POST" };
+      const request = {
+        header: headerRequest,
+        url,
+        body: data,
+        method: 'POST',
+      };
       this.thirdPartyRequestsRepository.save({ request, response });
 
       return response.pricing;
