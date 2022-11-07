@@ -184,7 +184,12 @@ export class DeliveriesService {
 
           this.saveNegativeResultOrder(deliveryData, err);
         });
-      const request = { header: headerRequest, url: urlDelivery, data: orderData, method: "POST" };
+      const request = {
+        header: headerRequest,
+        url: urlDelivery,
+        data: orderData,
+        method: 'POST',
+      };
       this.thirdPartyRequestsRepository.save({
         request,
         response: orderDelivery,
@@ -316,7 +321,12 @@ export class DeliveriesService {
           ),
         );
       });
-    const request = { header: headerRequest, url: urlDelivery, data: data, method: "DELETE" };
+    const request = {
+      header: headerRequest,
+      url: urlDelivery,
+      data: data,
+      method: 'DELETE',
+    };
     this.thirdPartyRequestsRepository.save({
       request,
       response: cancelOrderDelivery,
