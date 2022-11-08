@@ -1,10 +1,18 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { AxiosResponse } from 'axios';
 import { unescape } from 'querystring';
 import { firstValueFrom, map } from 'rxjs';
+import { CourierRepository } from 'src/database/repository/couriers.repository';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
+import { RMessage } from 'src/response/response.interface';
+import { ResponseService } from 'src/response/response.service';
 
 @Injectable()
 export class InternalMultipickupService {
@@ -12,22 +20,27 @@ export class InternalMultipickupService {
     private readonly settingRepository: SettingsRepository,
     private readonly httpService: HttpService,
     private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
+    private readonly courierRepository: CourierRepository,
+    private readonly responseService: ResponseService,
   ) {}
 
   logger = new Logger();
 
   async getDeliveryMultipickupPrice(data: any) {
-    // const data = await this.dummyData();
-
     //** CREATE PAYLOAD FOR ELOG DATA */
     const elogData = await this.elogData(data);
-    this.logger.log(data, 'ELOG DATA RESULT');
+    //this.logger.log(data, 'ELOG DATA RESULT');
 
     //** ELOG SETUP */
     const elogSettings = await this.getElogSettings();
     const elogUrl = elogSettings['elog_api_url'][0];
     const elogUsername = elogSettings['elog_username'][0];
     const elogPassword = elogSettings['elog_password'][0];
+
+    //** SEARCH COURIER BY ID */
+    const ids = data.courier_id;
+    const values = await this.searchCourierElog(ids);
+    const code = values[0].code;
 
     //** LOOP FOR CREATE MULTI PICKUP */
     for (let index = 0; index < data.pickup_destinations.length; index++) {
@@ -71,7 +84,7 @@ export class InternalMultipickupService {
         }),
       );
 
-    //** HEADERS DATA */
+    //** REQUEST DATA */
     const request = {
       header: headerRequest,
       urlDeliveryElog,
@@ -81,8 +94,11 @@ export class InternalMultipickupService {
 
     //** RESULT BY ELOG */
     const response = await firstValueFrom(get_request);
-    // this.logger.log(request, 'ELOG DATA HEADERS');
+    // this.logger.log(request, 'ELOG DATA REQUEST');
     this.logger.log(response, 'ELOG DATA RESPONSES');
+
+    //** SAVE RATES ELOG */
+    this.thirdPartyRequestsRepository.save({ code, request, response });
 
     //** BACK TO GET RESPONSE */
     return response;
@@ -111,6 +127,29 @@ export class InternalMultipickupService {
     }
   }
 
+  //** SEARCH COURIER BY ID */
+  async searchCourierElog(ids: string) {
+    return this.courierRepository
+      .find({
+        where: { id: ids },
+        select: ['code'],
+      })
+      .catch((err) => {
+        const errors: RMessage = {
+          value: '',
+          property: 'Courier tidak dapat di temukan.',
+          constraint: [err.message],
+        };
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            errors,
+            'Bad Request',
+          ),
+        );
+      });
+  }
+
   //** ELOG DATA DELIVERIES */
   elogData(data) {
     const elogData = {
@@ -123,31 +162,5 @@ export class InternalMultipickupService {
       ],
     };
     return elogData;
-  }
-
-  dummyData() {
-    const data = {
-      pickup_destinations: [
-        {
-          location_latitude: -6.2394271,
-          location_longitude: 106.8456447,
-          items: [
-            {
-              name: ' handphone',
-              price: 10000,
-              weight: 0,
-              quantity: 1,
-            },
-          ],
-        },
-      ],
-      dropoff_destinations: [
-        {
-          location_latitude: -6.2394271,
-          location_longitude: 106.8556447,
-        },
-      ],
-    };
-    return data;
   }
 }
