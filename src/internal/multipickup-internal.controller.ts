@@ -9,7 +9,7 @@ export class InternalMultipickupController {
     private readonly internalMultipickupService: InternalMultipickupService,
   ) {}
 
-  @Get('internal/couriers-multipickup/price')
+  @Get('internal/couriers/price-multipickup')
   @ResponseStatusCode()
   async getDeliveryMultipickupPrice(
     @Query() data: GetDeliveryPrice,

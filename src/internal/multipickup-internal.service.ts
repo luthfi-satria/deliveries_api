@@ -18,7 +18,6 @@ export class InternalMultipickupService {
 
   async getDeliveryMultipickupPrice(data: any) {
     // const data = await this.dummyData();
-    // this.logger.log(data, 'DUMMY DATA');
 
     //** CREATE PAYLOAD FOR ELOG DATA */
     const elogData = await this.elogData(data);
