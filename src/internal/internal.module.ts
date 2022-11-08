@@ -20,6 +20,8 @@ import { SettingService } from 'src/setting/setting.service';
 import { AuthInternalService } from './auth-internal.service';
 import { InternalController } from './internal.controller';
 import { InternalService } from './internal.service';
+import { InternalMultipickupController } from './multipickup-internal.controller';
+import { InternalMultipickupService } from './multipickup-internal.service';
 
 @Module({
   imports: [
@@ -36,10 +38,11 @@ import { InternalService } from './internal.service';
       name: 'deliveries',
     }),
   ],
-  controllers: [InternalController],
+  controllers: [InternalController, InternalMultipickupController],
   providers: [
     InternalService,
     AuthInternalService,
+    InternalMultipickupService,
     CommonService,
     ResponseService,
     RedisDeliveryService,
