@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ResponseStatusCode } from 'src/response/response.decorator';
 import { GetDeliveryPrice } from './dto/courier.dto';
 import { InternalMultipickupService } from './multipickup-internal.service';
@@ -11,7 +11,9 @@ export class InternalMultipickupController {
 
   @Get('internal/couriers-multipickup/price')
   @ResponseStatusCode()
-  async getDeliveryMultipickupPrice(): Promise<any> {
-    return this.internalMultipickupService.getDeliveryMultipickupPrice();
+  async getDeliveryMultipickupPrice(
+    @Query() data: GetDeliveryPrice,
+  ): Promise<any> {
+    return this.internalMultipickupService.getDeliveryMultipickupPrice(data);
   }
 }

@@ -16,18 +16,21 @@ export class InternalMultipickupService {
 
   logger = new Logger();
 
-  async getDeliveryMultipickupPrice() {
-    const data = await this.dummyData();
+  async getDeliveryMultipickupPrice(data: any) {
+    // const data = await this.dummyData();
     // this.logger.log(data, 'DUMMY DATA');
 
+    //** CREATE PAYLOAD FOR ELOG DATA */
     const elogData = await this.elogData(data);
     this.logger.log(data, 'ELOG DATA RESULT');
 
+    //** ELOG SETUP */
     const elogSettings = await this.getElogSettings();
     const elogUrl = elogSettings['elog_api_url'][0];
     const elogUsername = elogSettings['elog_username'][0];
     const elogPassword = elogSettings['elog_password'][0];
 
+    //** LOOP FOR CREATE MULTI PICKUP */
     for (let index = 0; index < data.pickup_destinations.length; index++) {
       const rows = data.pickup_destinations[index];
       const CartItems = [];
@@ -43,6 +46,7 @@ export class InternalMultipickupService {
         });
       }
 
+      //** PUSH FOR ELOG DATA */
       elogData.pickup_destinations.push({
         latitude: data.pickup_destinations[0].location_latitude,
         longitude: data.pickup_destinations[0].location_longitude,
@@ -58,6 +62,8 @@ export class InternalMultipickupService {
         'basic ' +
         btoa(unescape(encodeURIComponent(elogUsername + ':' + elogPassword))),
     };
+
+    //** EXECUTE BY AXIOS DATA */
     const get_request = this.httpService
       .post(urlDeliveryElog, elogData, { headers: headerRequest })
       .pipe(
@@ -65,15 +71,23 @@ export class InternalMultipickupService {
           return axiosResponse.data;
         }),
       );
-    const response = await firstValueFrom(get_request);
+
+    //** HEADERS DATA */
     const request = {
       header: headerRequest,
       urlDeliveryElog,
       body: data,
       method: 'POST',
     };
+
+    //** RESULT BY ELOG */
+    const response = await firstValueFrom(get_request);
+
+    //** SAVE TO THIRD PARTY REQUEST */
     this.thirdPartyRequestsRepository.save({ request, response });
     this.logger.log(response, 'ELOG DATA RESPONSE');
+
+    //** BACK TO GET RESPONSE */
     return response;
   }
 
@@ -87,6 +101,7 @@ export class InternalMultipickupService {
         .withDeleted()
         .getMany();
 
+      //** CREATE EXTRACT DATA BY REPLACE */
       for (const Item in settings) {
         result[settings[Item].name] = JSON.parse(
           settings[Item].value.replace('{', '[').replace('}', ']'),
