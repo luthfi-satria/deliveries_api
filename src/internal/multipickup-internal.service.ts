@@ -82,10 +82,8 @@ export class InternalMultipickupService {
 
     //** RESULT BY ELOG */
     const response = await firstValueFrom(get_request);
-
-    //** SAVE TO THIRD PARTY REQUEST */
-    this.thirdPartyRequestsRepository.save({ request, response });
-    this.logger.log(response, 'ELOG DATA RESPONSE');
+    // this.logger.log(request, 'ELOG DATA HEADERS');
+    this.logger.log(response, 'ELOG DATA RESPONSES');
 
     //** BACK TO GET RESPONSE */
     return response;
