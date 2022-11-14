@@ -78,6 +78,9 @@ export class OrdersDocument {
   @Column({ nullable: true })
   tracking_url: string;
 
+  @Column({ default: 'BITESHIP' })
+  logistic_platform: string;
+
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date | string;
 

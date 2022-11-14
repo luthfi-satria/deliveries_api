@@ -15,6 +15,8 @@ import { DeliveriesModule } from './deliveries/deliveries.module';
 import { InternalModule } from './internal/internal.module';
 import { SettingModule } from './setting/setting.module';
 import { RegionalsModule } from './regionals/regionals.module';
+import { ElogModule } from './elog/elog.module';
+import { CronElogModule } from './cron/cron-elog.module';
 
 @Module({
   imports: [
@@ -39,6 +41,8 @@ import { RegionalsModule } from './regionals/regionals.module';
     SettingModule,
     SeederModule,
     RegionalsModule,
+    CronElogModule,
+    ElogModule,
   ],
   controllers: [AppController],
   providers: [AppService],
