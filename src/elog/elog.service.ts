@@ -1,3 +1,4 @@
+import { HttpService } from '@nestjs/axios';
 import {
   BadRequestException,
   HttpStatus,
@@ -5,6 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
+import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 
@@ -14,6 +16,8 @@ export class ElogService {
     private readonly messageService: MessageService,
     private readonly responseService: ResponseService,
     private readonly settingRepo: SettingsRepository,
+    private readonly httpService: HttpService,
+    private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
   ) {}
 
   private readonly logger = new Logger(ElogService.name);
@@ -72,6 +76,25 @@ export class ElogService {
           'Bad Request',
         ),
       );
+    }
+  }
+
+  //** GET SETUP ELOG */
+  async getElogSettings() {
+    try {
+      const result = {};
+      const settings = await this.listElogSettings();
+
+      for (const Item in settings) {
+        result[settings[Item].name] = JSON.parse(
+          settings[Item].value.replace('{', '[').replace('}', ']'),
+        );
+      }
+
+      return result;
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
   }
 

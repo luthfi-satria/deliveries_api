@@ -96,13 +96,19 @@ export class CouriersService {
             ),
           );
         });
-      console.log(count);
+
+      console.log('couriers_count: ' + count);
+
       let itemsWithInfos: any[] = [];
       if (isIncludePrice && items.length) {
         const CourierCodesObj: any = {};
         const CourierPrices: any = {};
+        let ElogCouriers = {};
         items.forEach((courier: any) => {
           CourierCodesObj[courier.code] = true;
+          if (courier.code == 'elog') {
+            ElogCouriers = courier;
+          }
         });
 
         const couriersWithPrice: any[] = await this.fetchCourierService
@@ -148,6 +154,22 @@ export class CouriersService {
             });
           }
         });
+
+        // Get elog price
+        const elogCouriersPrice: any =
+          await this.fetchCourierService.fetchElogPrice({
+            origin_latitude: originLatitude,
+            origin_longitude: originLongitude,
+            destination_latitude: destinationLatitude,
+            destination_longitude: destinationLongitude,
+            couriers: '',
+            items: [],
+          });
+
+        if (elogCouriersPrice && elogCouriersPrice.data) {
+          ElogCouriers['ongkir'] = elogCouriersPrice.data.total_price;
+        }
+        itemsWithInfos.push(ElogCouriers);
       } else {
         itemsWithInfos = [...items];
       }

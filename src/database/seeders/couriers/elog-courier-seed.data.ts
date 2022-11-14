@@ -14,7 +14,7 @@ export const elogCouriersData: CourierDocument[] = [
     duration_range: '1 - 3',
     duration_unit: 'hours',
     status: 'ACTIVE',
-    sequence: null,
+    sequence: 0,
     created_at: 'now()',
     updated_at: 'now()',
     deleted_at: null,
