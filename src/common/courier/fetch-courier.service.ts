@@ -12,6 +12,8 @@ import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { AxiosResponse } from 'axios';
 import { FetchCourierWithPrice } from './dto/courier.dto';
+import { ElogService } from 'src/elog/elog.service';
+import { unescape } from 'querystring';
 
 @Injectable()
 export class FetchCourierService {
@@ -21,6 +23,7 @@ export class FetchCourierService {
     private readonly responseService: ResponseService,
     private readonly messageService: MessageService,
     private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
+    private readonly elogService: ElogService,
   ) {}
 
   logger = new Logger();
@@ -86,6 +89,78 @@ export class FetchCourierService {
       this.thirdPartyRequestsRepository.save({ request, response });
 
       return response.pricing;
+    } catch (e) {
+      console.log(e.response, 'ERROR');
+
+      if (e.response.data.code == 40001002) {
+        return [];
+      }
+
+      if (e.response.data && e.response.status) {
+        throw new HttpException(e.response.data, e.response.status);
+      } else {
+        throw new InternalServerErrorException();
+      }
+    }
+  }
+
+  async fetchElogPrice(data: FetchCourierWithPrice): Promise<any> {
+    try {
+      const elogSettings = await this.elogService.getElogSettings();
+      const elogUrl = elogSettings['elog_api_url'][0];
+      const elogUsername = elogSettings['elog_username'][0];
+      const elogPassword = elogSettings['elog_password'][0];
+
+      const requestData = {
+        pickup_destinations: [
+          {
+            latitude: data.origin_latitude,
+            longitude: data.origin_longitude,
+            items: [
+              {
+                name: 'handphone',
+                price: 10000,
+                weight: 0,
+                quantity: 1,
+              },
+            ],
+          },
+        ],
+        dropoff_destinations: [
+          {
+            latitude: data.destination_latitude,
+            longitude: data.destination_longitude,
+          },
+        ],
+      };
+
+      //** EXECUTE CREATE ORDER BY POST */
+      const urlDeliveryElog = `${elogUrl}/openapi/v0/rate/send`;
+      const headerRequest = {
+        'Content-Type': 'application/json',
+        Authorization:
+          'basic ' +
+          btoa(unescape(encodeURIComponent(elogUsername + ':' + elogPassword))),
+      };
+      const get_request = this.httpService
+        .post(urlDeliveryElog, requestData, { headers: headerRequest })
+        .pipe(
+          map((axiosResponse: AxiosResponse) => {
+            return axiosResponse.data;
+          }),
+        );
+
+      const response = await firstValueFrom(get_request);
+
+      const request = {
+        header: headerRequest,
+        urlDeliveryElog,
+        body: data,
+        method: 'POST',
+      };
+      this.thirdPartyRequestsRepository.save({ request, response });
+
+      return response;
     } catch (e) {
       console.log(e.response, 'ERROR');
 
