@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsNumber, IsOptional } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional } from 'class-validator';
 
 export class RegionalsDTO {
   @IsOptional()
@@ -14,4 +14,8 @@ export class RegionalsDTO {
   @IsOptional()
   @Type(() => Number)
   limit: number;
+
+  @IsOptional()
+  @IsBoolean()
+  status: boolean;
 }
