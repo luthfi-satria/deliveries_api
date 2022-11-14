@@ -7,19 +7,16 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity({ name: 'deliveries_elog_couriers' })
+@Entity({ name: 'deliveries_elog_regionals' })
 export class elogDocuments {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
-  regional: string;
+  regional_name: string;
 
   @Column()
-  elog_status: number;
-
-  @Column()
-  efood_status: number;
+  status: boolean;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'LOCALTIMESTAMP' })
   created_at: Date | string;
