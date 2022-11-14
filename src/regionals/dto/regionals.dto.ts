@@ -16,6 +16,6 @@ export class RegionalsDTO {
   limit: number;
 
   @IsOptional()
-  @IsBoolean()
+  // @IsBoolean()
   status: boolean;
 }
