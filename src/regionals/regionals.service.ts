@@ -91,6 +91,37 @@ export class RegionalsService {
     }
   }
 
+  async updatedStatus(param): Promise<any> 
+  {
+    try {
+      const updateQuery = await this.elogRepository
+      .createQueryBuilder()
+      .update('deliveries_elog_regionals')
+      .set(param)
+      .where('id = :id', { id: param.id })
+      .execute();
+      return {
+        affected: updateQuery.affected,
+  };
+    } catch (error) {
+      this.logger.log(error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: [
+              this.messageService.get('delivery.general.fail'),
+              error.message,
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
   async getAllCities() {
     //** GET DATA CITIES */
     const url = `${process.env.BASEURL_ADMINS_SERVICE}/api/v1/admins/query/cities/all`;
