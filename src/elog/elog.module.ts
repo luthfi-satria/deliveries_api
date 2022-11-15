@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
+import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { ElogController } from './elog.controller';
@@ -11,7 +12,11 @@ import { ElogRepository } from './repository/elog.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([ElogRepository, SettingsRepository]),
+    TypeOrmModule.forFeature([
+      ElogRepository,
+      SettingsRepository,
+      ThirdPartyRequestsRepository,
+    ]),
     ConfigModule,
     HttpModule,
   ],

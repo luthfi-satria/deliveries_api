@@ -21,6 +21,8 @@ import { RedisDeliveryProcessor } from './redis/redis-delivery.processor';
 import { SettingService } from 'src/setting/setting.service';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
+import { DeliveriesMultipleService } from 'src/deliveries/deliveries-multiple.service';
+import { ElogService } from 'src/elog/elog.service';
 
 @Global()
 @Module({
@@ -66,10 +68,12 @@ import { ThirdPartyRequestsRepository } from 'src/database/repository/third-part
     MessageService,
     SettingService,
     DeliveriesService,
+    DeliveriesMultipleService,
     RedisDeliveryService,
     RedisDeliveryProcessor,
     CouriersService,
     NatsService,
+    ElogService,
   ],
   exports: [CommonStorageService, NotificationService, FetchCourierService],
   controllers: [NatsController],
