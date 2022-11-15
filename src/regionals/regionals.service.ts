@@ -91,18 +91,17 @@ export class RegionalsService {
     }
   }
 
-  async updatedStatus(param): Promise<any> 
-  {
+  async updatedStatus(param): Promise<any> {
     try {
       const updateQuery = await this.elogRepository
-      .createQueryBuilder()
-      .update('deliveries_elog_regionals')
-      .set(param)
-      .where('id = :id', { id: param.id })
-      .execute();
+        .createQueryBuilder()
+        .update('deliveries_elog_regionals')
+        .set(param)
+        .where('id = :id', { id: param.id })
+        .execute();
       return {
         affected: updateQuery.affected,
-  };
+      };
     } catch (error) {
       this.logger.log(error);
       throw new BadRequestException(

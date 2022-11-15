@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Put, Query } from '@nestjs/common';
 import { RegionalsService } from './regionals.service';
 import { ResponseStatusCode } from 'src/response/response.decorator';
 import { RSuccessMessage } from 'src/response/response.interface';
@@ -41,12 +41,9 @@ export class RegionalsController {
   @UserTypeAndLevel('admin.*')
   @AuthJwtGuard()
   @ResponseStatusCode()
-  async updatedStatus(
-    @Body() param : elogDocuments ):Promise<RSuccessMessage> {
+  async updatedStatus(@Body() param: elogDocuments): Promise<RSuccessMessage> {
     try {
-      const updatedRegionals = await this.regionalsService.updatedStatus(
-        param,
-      );
+      const updatedRegionals = await this.regionalsService.updatedStatus(param);
       return this.responseService.success(
         true,
         this.messageService.get('delivery.general.success'),

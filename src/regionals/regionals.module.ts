@@ -3,7 +3,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
-import { elogDocuments } from 'src/elog/entities/elog.entities';
 import { ElogRepository } from 'src/elog/repository/elog.repository';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
