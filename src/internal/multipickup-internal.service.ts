@@ -13,6 +13,7 @@ import { SettingsRepository } from 'src/database/repository/settings.repository'
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
+import { ElogCouriersAvailabilityDocuments } from './dto/elog-couriers.dto';
 
 @Injectable()
 export class InternalMultipickupService {
@@ -162,5 +163,37 @@ export class InternalMultipickupService {
       ],
     };
     return elogData;
+  }
+
+  async getElogDriverAvailability(data: ElogCouriersAvailabilityDocuments) {
+    this.logger.log(data, 'ELOG DATA PAYLOAD CHECK DRIVER');
+
+    //** ELOG SETUP */
+    const elogSettings = await this.getElogSettings();
+    const elogUrl = elogSettings['elog_api_url'][0];
+    const elogUsername = elogSettings['elog_username'][0];
+    const elogPassword = elogSettings['elog_password'][0];
+
+    //** EXECUTE GET DELIVERIES ELOG PRICE */
+    const urlDeliveryElog = `${elogUrl}/openapi/v0/availability/send`;
+    const headerRequest = {
+      'Content-Type': 'application/json',
+      Authorization:
+        'basic ' +
+        btoa(unescape(encodeURIComponent(elogUsername + ':' + elogPassword))),
+    };
+
+    //** EXECUTE BY AXIOS DATA */
+    const get_request = this.httpService
+      .post(urlDeliveryElog, data, { headers: headerRequest })
+      .pipe(
+        map((axiosResponse: AxiosResponse) => {
+          return axiosResponse.data;
+        }),
+      );
+
+    const response = await firstValueFrom(get_request);
+    this.logger.log(response, 'ELOG CHECK DRIVER RESPONSES');
+    return response;
   }
 }
