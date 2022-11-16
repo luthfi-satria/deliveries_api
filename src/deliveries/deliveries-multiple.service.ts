@@ -127,7 +127,7 @@ export class DeliveriesMultipleService {
           note: '',
         },
       ],
-      price: 'price' in data ? data.price : 0,
+      price: 'ongkir' in data ? data.ongkir : 0,
     };
     return elogData;
   }
@@ -199,7 +199,7 @@ export class DeliveriesMultipleService {
 
         //** BROADCAST */
         this.natsService.clientEmit(
-          `deliveries.multiple.order.failed`,
+          `deliveries.order.multipickupfailed`,
           deliveryData,
         );
 
@@ -267,7 +267,7 @@ export class DeliveriesMultipleService {
         eventName = 'reordered';
       }
       this.natsService.clientEmit(
-        `deliveries.multiple.order.${eventName}`,
+        `deliveries.order.multipickup${eventName}`,
         getOrder,
       );
     } else {
@@ -280,7 +280,7 @@ export class DeliveriesMultipleService {
 
       //broadcast
       this.natsService.clientEmit(
-        `deliveries.multiple.order.failed`,
+        `deliveries.order.multipickupfailed`,
         deliveryData,
       );
 
@@ -379,7 +379,7 @@ export class DeliveriesMultipleService {
     const order = await this.ordersRepository.save(orderDelivery);
 
     //broadcast
-    this.natsService.clientEmit(`deliveries.multiple.order.cancelled`, order);
+    this.natsService.clientEmit(`deliveries.order.multipickupcancelled`, order);
 
     return cancelOrderDelivery;
   }
@@ -464,9 +464,9 @@ export class DeliveriesMultipleService {
           ],
         },
       ],
-      price: 20000,
+      ongkir: 20000,
     };
-    this.natsService.clientEmit(`orders.multiple.order.accepted`, dummy);
+    this.natsService.clientEmit(`orders.order.multipickupaccepted`, dummy);
     return dummy;
   }
 }
