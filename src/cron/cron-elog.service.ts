@@ -227,7 +227,7 @@ export class CronElogService {
         },
       };
 
-      const url = `${process.env.BASEURL_ORDERS_SERVICE}/api/v1/orders/internal/update-multipickup-bulk`;
+      const url = `${process.env.BASEURL_ORDERS_SERVICE}/api/v1/orders/internal/multiple/update-status-bulk`;
       const targetStatus = await firstValueFrom(
         this.httpService
           .put(url, { orders_orders_group: reqData }, headerRequest)
