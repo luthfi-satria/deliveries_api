@@ -434,7 +434,6 @@ export class DeliveriesMultipleService {
     };
   }
 
-
   dummyBroadcast() {
     const dummy = {
       group_id: 'de2af395-c500-4ece-8bcb-be70ea61a5d7',
