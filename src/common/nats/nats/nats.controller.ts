@@ -27,16 +27,16 @@ export class NatsController {
   }
 
   //** Handling Multipickup order Elog */
-  @EventPattern('orders.multiple.order.accepted')
+  @EventPattern('orders.order.multipickupaccepted')
   async saveEfoodMultipickup(@Payload() data: any) {
-    this.logger.log('orders.multiple.order.accepted');
+    this.logger.log('orders.order.multipickupaccepted');
     this.deliveriesMultipleService.createMultipleOrder(data);
   }
 
   //** Deliveries Multipickup Elog Reordered */
-  @EventPattern('orders.multiple.order.reordered')
+  @EventPattern('orders.order.multipickupreordered')
   async deliveryReorderedMultipickup(@Payload() data: any) {
-    this.logger.log('orders.multiple.order.reordered');
+    this.logger.log('orders.order.multipickupreordered');
     data.delivery_status = 'DRIVER_NOT_FOUND';
     this.deliveriesMultipleService.createMultipleOrder(data);
   }
