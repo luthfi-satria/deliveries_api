@@ -1,11 +1,11 @@
 import { Controller, Post } from '@nestjs/common';
 import { CronElogService } from './cron-elog.service';
 
-@Controller('api/v1/cron/elog')
+@Controller('api/v1/deliveries/cron')
 export class CronElogController {
   constructor(private readonly cronElogService: CronElogService) {}
 
-  @Post()
+  @Post('/elog')
   async updateElogDeliveries() {
     return this.cronElogService.updateElogStatus();
   }
