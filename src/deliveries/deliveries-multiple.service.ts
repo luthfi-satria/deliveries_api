@@ -127,7 +127,7 @@ export class DeliveriesMultipleService {
           note: '',
         },
       ],
-      price: 'price' in data ? data.price : 0,
+      price: 'ongkir' in data ? data.ongkir : 0,
     };
     return elogData;
   }
@@ -464,7 +464,7 @@ export class DeliveriesMultipleService {
           ],
         },
       ],
-      price: 20000,
+      ongkir: 20000,
     };
     this.natsService.clientEmit(`orders.order.multipickupaccepted`, dummy);
     return dummy;
