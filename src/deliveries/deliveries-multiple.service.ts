@@ -136,6 +136,7 @@ export class DeliveriesMultipleService {
     //** GET DATA CUSTOMER BY ID */
     const url = `${process.env.BASEURL_CUSTOMERS_SERVICE}/api/v1/internal/customers/${data.customer_id}`;
     const customer: any = await this.commonService.getHttp(url);
+
     if (!customer) {
       const errContaint: any = {
         value: data.customer_id,
@@ -143,7 +144,7 @@ export class DeliveriesMultipleService {
         constraint: ['Customer Id tidak ditemukan.'],
       };
       const deliveryData: Partial<OrdersDocument> = {
-        order_id: data.id,
+        order_id: data.group_id,
         response_payload: errContaint,
         logistic_platform: 'ELOG',
       };
@@ -162,7 +163,7 @@ export class DeliveriesMultipleService {
         constraint: ['Store Id tidak ditemukan.'],
       };
       const deliveryData: Partial<OrdersDocument> = {
-        order_id: data.id,
+        order_id: data.group_id,
         response_payload: errContaint,
         logistic_platform: 'ELOG',
       };
@@ -234,7 +235,7 @@ export class DeliveriesMultipleService {
     this.thirdPartyRequestsRepository.save({
       request,
       response: orderDelivery,
-      code: orderDelivery.id,
+      code: orderDelivery.data.id,
     });
   }
 
@@ -277,6 +278,7 @@ export class DeliveriesMultipleService {
       ) {
         eventName = 'reordered';
       }
+      eventName = eventName.toLowerCase();
       this.natsService.clientEmit(
         `deliveries.order.multipickup${eventName}`,
         getOrder,
@@ -439,150 +441,5 @@ export class DeliveriesMultipleService {
       orderStatus: status,
       deliveryStatus: delivStatus,
     };
-  }
-
-  dummyBroadcast() {
-    const dummy = {
-      group_id: 'de2af395-c500-4ece-8bcb-be70ea61a5d7',
-      logistic_platform: 'ELOG',
-      courier_id: 'ef70a958-ad59-4d00-8d64-350b537ae25e',
-      customer_id: '53ca9038-0a27-4fd1-b786-bb77e07b63ed',
-      customer_address: {
-        id: 'b842f6e2-712b-49e2-9f7c-1a36c7bc2b0f',
-        name: 'Rumah',
-        address:
-          'Jl. Pluit Selatan I Blok K No. 7, RT.1/RW.10, Pluit, Kec. Penjaringan, Jakarta Utara 14450',
-        location_latitude: -6.302862454540228,
-        location_longitude: 106.72258744050023,
-        address_detail: 'Lobby K Tower Alamanda',
-        postal_code: '12450',
-        created_at: '2022-11-03T09:19:16.456Z',
-        updated_at: '2022-11-03T09:19:16.456Z',
-        deleted_at: null,
-      },
-      delivery_type: 'DELIVERY',
-      orders: [
-        {
-          id: '56fe2fcb-34c2-4379-8936-e9c2b31213a1',
-          no: 'EF218',
-          store_id: 'a0e6fc6e-d64c-408d-a291-dcf2b698ab5b',
-          merchant_id: 'b0db71eb-0f30-49e2-bc3c-917285084e4c',
-          cart_payload: [
-            {
-              uniqId: '01c6ad35-fa6b-4096-986e-5b809eb73f9d',
-              quantity: 1,
-              menu: {
-                id: '7213fa21-1976-4bb8-9cd2-ed4638195187',
-                photo:
-                  '/api/v1/orders/order/56fe2fcb-34c2-4379-8936-e9c2b31213a1/0/image/ice-cream-cone-0000.jpg',
-                name: 'Combo 1 Chicken ',
-                description: 'Combo 1 Chicken ',
-                status: 'ACTIVE',
-                recomendation: false,
-                merchant_id: 'b0db71eb-0f30-49e2-bc3c-917285084e4c',
-                sequence: null,
-                created_at: '2021-11-08 14:21:34',
-                updated_at: '2021-11-08 14:21:34',
-                store_avilability_id: null,
-                store_id: 'a0e6fc6e-d64c-408d-a291-dcf2b698ab5b',
-                menu_prices: [
-                  {
-                    id: '989cb403-af69-42a7-b3d1-6f058d945646',
-                    price: 20000,
-                    menu_category_prices: [
-                      {
-                        id: 'e8917220-dd11-414a-b772-7057adf7a2c4',
-                        name: 'DKI Jakarta',
-                      },
-                    ],
-                    menu_sales_channels: [
-                      {
-                        id: 'c1a089c7-5047-48fe-801e-2f65f0e87997',
-                        name: 'eFOOD',
-                        platform: 'ONLINE',
-                      },
-                    ],
-                  },
-                ],
-                variations: [],
-                stock_available: true,
-                discounted_price: null,
-                type: null,
-              },
-              storeAvilabiltyId: null,
-              variantSelected: [],
-              note: '',
-              price: 20000,
-              priceTotal: 20000,
-              addOns: [],
-              discounted_price: null,
-              totalPrice: 20000,
-            },
-          ],
-        },
-      ],
-      ongkir: 20000,
-    };
-    this.natsService.clientEmit(`orders.order.multipickupaccepted`, dummy);
-    return dummy;
-  }
-
-  async dummyDeliveryData() {
-    const orderDelivery = {
-      status: 'success',
-      message: 'Berhasil membuat order.',
-      data: {
-        id: '20915f8c-0553-485c-867b-f10d79f26ad4',
-        airway_bill: 'ELN13012111600001',
-        tracking_url:
-          'https://dev.elog.co.id/tracking/20915f8c-0553-485c-867b-f10d79f26ad4',
-        delivery_type: 'INSTANT',
-        status: 'CONFIRMED',
-        pickup_destinations: [
-          {
-            id: 'fd301087-32fe-4504-a4a8-351c31596f80',
-            longitude: 107.59653259049831,
-            latitude: -6.877444678496585,
-            contact_name: 'Richeese Factory Flamboyan ',
-            contact_phone: '6282214863662',
-            address:
-              'Jl. Sukajadi No.234, Gegerkalong, Kec. Sukasari, Kota Bandung, Jawa Barat 40153',
-            address_name: 'Richeese Factory Flamboyan ',
-            location_description: '',
-            note: '',
-            destination_order: 0,
-            items: [
-              {
-                name: 'Combo Rich Burger - Beef',
-                weight: 1,
-                quantity: 1,
-                price: 48000,
-                note: null,
-              },
-            ],
-            external_id: null,
-          },
-        ],
-        dropoff_destinations: [
-          {
-            id: 'c34d3a23-1040-46d5-b078-3d2d4307bb2a',
-            longitude: 107.5785705,
-            latitude: -6.8905558,
-            contact_name: 'Fatkhur Roni',
-            contact_phone: '6285648636747',
-            address:
-              'WU Tower, Jalan Doktor Djunjunan, Sukawarna, Bandung City, West Java, Indonesia',
-            address_name: 'kantor',
-            location_description: '',
-            note: '',
-            destination_order: 1,
-          },
-        ],
-      },
-    };
-
-    const natsdata = this.dummyBroadcast();
-
-    return await this.saveToDeliveryOrders(orderDelivery, natsdata);
   }
 }
