@@ -187,6 +187,11 @@ export class DeliveriesMultipleService {
         btoa(unescape(encodeURIComponent(elogUsername + ':' + elogPassword))),
     };
 
+    const headersData = {
+      headerRequest: headerRequest,
+      url: urlDeliveryElog,
+    };
+
     //** EXECUTE CREATE ORDER BY POST */
     const orderDelivery: any = await this.commonService
       .postHttp(urlDeliveryElog, elogData, headerRequest)
@@ -204,21 +209,29 @@ export class DeliveriesMultipleService {
           deliveryData,
         );
 
+        this.thirdPartyRequestsRepository.save({
+          request: {
+            logistic_platform: 'elog',
+            header: headersData.headerRequest,
+            url: headersData.url,
+            data: elogData,
+            method: 'POST',
+          },
+          response: err,
+        });
+
         //** IF ERROR */
         await this.saveNegativeResultOrder(deliveryData, err);
       });
+    // const orderDelivery = this.dummyOrderDelivery();
+    if (orderDelivery) {
+      this.logger.log('ELOG RESPONSE DATA');
+      console.log(orderDelivery);
 
-    this.logger.log('ELOG RESPONSE DATA');
-    console.log(orderDelivery);
+      await this.saveToThirdPartyRequest(headersData, elogData, orderDelivery);
 
-    const headersData = {
-      headerRequest: headerRequest,
-      url: urlDeliveryElog,
-    };
-
-    await this.saveToThirdPartyRequest(headersData, elogData, orderDelivery);
-
-    await this.saveToDeliveryOrders(orderDelivery, natsdata);
+      await this.saveToDeliveryOrders(orderDelivery, natsdata);
+    }
   }
 
   async saveToThirdPartyRequest(headersData, elogData, orderDelivery) {
@@ -305,16 +318,19 @@ export class DeliveriesMultipleService {
     deliveryData: Partial<OrdersDocument>,
     errContaint: any,
   ) {
-    const test = await this.ordersRepository.save(deliveryData);
-    console.log(test);
+    try {
+      await this.ordersRepository.save(deliveryData);
+    } catch (error) {
+      console.log(error);
 
-    throw new BadRequestException(
-      this.responseService.error(
-        HttpStatus.BAD_REQUEST,
-        errContaint,
-        'Bad Request',
-      ),
-    );
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          errContaint,
+          'Bad Request',
+        ),
+      );
+    }
   }
 
   async cancelMultipleOrder(order_id: string): Promise<any> {
@@ -440,6 +456,70 @@ export class DeliveriesMultipleService {
     return {
       orderStatus: status,
       deliveryStatus: delivStatus,
+    };
+  }
+
+  dummyOrderDelivery() {
+    return {
+      status: 'success',
+      message: 'Berhasil membuat order.',
+      data: {
+        id: '20915f8c-0553-485c-867b-f10d79f26ad4',
+        airway_bill: 'ELN13012111600001',
+        tracking_url:
+          'https://dev.elog.co.id/tracking/20915f8c-0553-485c-867b-f10d79f26ad4',
+        delivery_type: 'INSTANT',
+        status: 'CONFIRMED',
+        pickup_destinations: [
+          {
+            id: 'fd301087-32fe-4504-a4a8-351c31596f80',
+            longitude: 107.59653259049831,
+            latitude: -6.877444678496585,
+            contact_name: 'Richeese Factory Flamboyan ',
+            contact_phone: '6282214863662',
+            address:
+              'Jl. Sukajadi No.234, Gegerkalong, Kec. Sukasari, Kota Bandung, Jawa Barat 40153',
+            address_name: 'Richeese Factory Flamboyan ',
+            location_description: '',
+            note: '',
+            destination_order: 0,
+            items: [
+              {
+                name: 'Combo Rich Burger - Beef',
+                weight: 1,
+                quantity: 1,
+                price: 48000,
+                note: null,
+              },
+            ],
+            external_id: null,
+          },
+        ],
+        dropoff_destinations: [
+          {
+            id: 'c34d3a23-1040-46d5-b078-3d2d4307bb2a',
+            longitude: 107.5785705,
+            latitude: -6.8905558,
+            contact_name: 'Fatkhur Roni',
+            contact_phone: '6285648636747',
+            address:
+              'WU Tower, Jalan Doktor Djunjunan, Sukawarna, Bandung City, West Java, Indonesia',
+            address_name: 'kantor',
+            location_description: '',
+            note: '',
+            destination_order: 1,
+          },
+        ],
+      },
+    };
+  }
+
+  dummyOrderFailed() {
+    return {
+      status: 'error',
+      error: 'ERR_NOT_FOUND',
+      message: 'Tidak dapat menemukan pengemudi di sekitar anda',
+      data: null,
     };
   }
 }
