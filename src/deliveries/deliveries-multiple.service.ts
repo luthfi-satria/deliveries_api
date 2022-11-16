@@ -81,7 +81,7 @@ export class DeliveriesMultipleService {
         });
       }
 
-      this.logger.log(elogData, 'ELOG DATA RESULTS');
+      this.logger.log(elogData, 'ELOG DATA PAYLOAD');
 
       //** ELOG SETTING */
       await this.elogApisHandling(data, elogData);
@@ -207,6 +207,9 @@ export class DeliveriesMultipleService {
         await this.saveNegativeResultOrder(deliveryData, err);
       });
 
+    this.logger.log('ELOG RESPONSE DATA');
+    console.log(orderDelivery);
+
     const headersData = {
       headerRequest: headerRequest,
       url: urlDeliveryElog,
@@ -237,13 +240,14 @@ export class DeliveriesMultipleService {
 
   async saveToDeliveryOrders(orderDelivery, data) {
     if (orderDelivery) {
+      const status = this.statusConverter(orderDelivery.status);
       const deliveryData: Partial<OrdersDocument> = {
         order_id: data.id,
         delivery_id: orderDelivery.id,
         price: orderDelivery.price,
         response_payload: orderDelivery,
-        status: OrdersStatus.FINDING_DRIVER,
-        service_status: orderDelivery.status,
+        status: status.orderStatus,
+        service_status: status.deliveryStatus,
         tracking_url: orderDelivery.tracking_url,
         logistic_platform: data.logistic_platform,
       };
@@ -382,6 +386,52 @@ export class DeliveriesMultipleService {
     this.natsService.clientEmit(`deliveries.order.multipickupcancelled`, order);
 
     return cancelOrderDelivery;
+  }
+
+  statusConverter(status: string) {
+    let delivStatus = OrdersServiceStatus.Confirmed;
+    switch (status) {
+      case 'CONFIRMED':
+        status = OrdersStatus.DRIVER_FOUND;
+        delivStatus = OrdersServiceStatus.Confirmed;
+        break;
+      case 'GO_TO_LOCATION_PICKUP':
+        status = OrdersStatus.DRIVER_FOUND;
+        delivStatus = OrdersServiceStatus.Allocated;
+        break;
+      case 'ARRIVE_AT_LOCATION_PICKUP':
+        status = OrdersStatus.DRIVER_FOUND;
+        delivStatus = OrdersServiceStatus.Allocated;
+        break;
+      case 'LOADING_GOODS_PICKUP':
+        status = OrdersStatus.DRIVER_FOUND;
+        delivStatus = OrdersServiceStatus.Picking_up;
+        break;
+      case 'GO_TO_LOCATION_DROPOFF':
+        status = OrdersStatus.DRIVER_FOUND;
+        delivStatus = OrdersServiceStatus.Dropping_of;
+        break;
+      case 'ARRIVE_AT_LOCATION_DROPOFF':
+        status = OrdersStatus.DRIVER_FOUND;
+        delivStatus = OrdersServiceStatus.Dropping_of;
+        break;
+      case 'LOADING_GOODS_DROPOFF':
+        status = OrdersStatus.DRIVER_FOUND;
+        delivStatus = OrdersServiceStatus.Dropping_of;
+        break;
+      case 'FINISHED':
+        status = OrdersStatus.COMPLETED;
+        delivStatus = OrdersServiceStatus.Delivered;
+        break;
+      case 'CANCELLED':
+        status = OrdersStatus.CANCELLED;
+        delivStatus = OrdersServiceStatus.Cancelled;
+        break;
+    }
+    return {
+      orderStatus: status,
+      deliveryStatus: delivStatus,
+    };
   }
 
   dummyBroadcast() {
