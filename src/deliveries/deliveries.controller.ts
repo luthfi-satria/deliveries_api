@@ -67,7 +67,7 @@ export class DeliveriesController {
   @ResponseStatusCode()
   async testElog(@Body() data: any): Promise<any> {
     // this.deliveriesMultipleService.dummyBroadcast();
-    await this.deliveriesMultipleService.dummyDeliveryData();
+    await this.deliveriesMultipleService.createMultipleOrder(data);
     return this.responseService.success(
       true,
       this.messageService.get('delivery.general.success'),
