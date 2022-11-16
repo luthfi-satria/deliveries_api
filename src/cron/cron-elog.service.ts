@@ -60,6 +60,7 @@ export class CronElogService {
     const result = {};
     if (multipickupData.length > 0 && reqData) {
       // check status pada elog APIS
+      console.log('request data mapping');
       console.log(reqData);
       this.logger.log('CRON JOBS::COMMUNICATING WITH ELOG APIs');
       const elogResponse = await this.callElogAPIS(Object.keys(reqData));
@@ -77,11 +78,16 @@ export class CronElogService {
             service_status: status.deliveryStatus,
           });
 
-          DeliveryHistory.push({
-            order_id: reqData[Rows.id].id,
-            status: status.orderStatus,
-            service_status: status.deliveryStatus,
-          });
+          if (
+            reqData[Rows.id].status != status.orderStatus &&
+            reqData[Rows.id].service_status != status.deliveryStatus
+          ) {
+            DeliveryHistory.push({
+              order_id: reqData[Rows.id].id,
+              status: status.orderStatus,
+              service_status: status.deliveryStatus,
+            });
+          }
 
           OrdersGroupsData.push({
             id: reqData[Rows.id].order_id,
@@ -96,7 +102,9 @@ export class CronElogService {
         this.logger.log('CRON JOBS::SAVE DELIVERY ORDER HISTORIES');
         console.log(DeliveryHistory);
         // create data deliveries order histories
-        await this.deliveryHistoryRepo.save(DeliveryHistory);
+        if (DeliveryHistory.length > 0) {
+          await this.deliveryHistoryRepo.save(DeliveryHistory);
+        }
 
         this.logger.log('CRON JOBS::SAVE DELIVERY ORDER');
         console.log(DeliveryData);
@@ -107,8 +115,10 @@ export class CronElogService {
         this.logger.log('CRON JOBS::COMMUNICATE WITH ORDERS SERVICE');
         console.log(OrdersGroupsData);
 
-        // call orders service
-        await this.updateOrderStatus(OrdersGroupsData);
+        if (DeliveryHistory.length > 0) {
+          // call orders service
+          await this.updateOrderStatus(OrdersGroupsData);
+        }
       }
     }
     this.logger.log('---- STOPPING CRON JOBS ----');
@@ -130,6 +140,8 @@ export class CronElogService {
           'driver_name',
           'driver_phone',
           'tracking_url',
+          'status',
+          'service_status',
         ])
         .where('logistic_platform = :platform', { platform: 'ELOG' })
         .andWhere('service_status NOT IN (:...status)', {
