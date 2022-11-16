@@ -78,10 +78,7 @@ export class CronElogService {
             service_status: status.deliveryStatus,
           });
 
-          if (
-            reqData[Rows.id].status != status.orderStatus &&
-            reqData[Rows.id].service_status != status.deliveryStatus
-          ) {
+          if (reqData[Rows.id].service_status != status.deliveryStatus) {
             DeliveryHistory.push({
               order_id: reqData[Rows.id].id,
               status: status.orderStatus,
