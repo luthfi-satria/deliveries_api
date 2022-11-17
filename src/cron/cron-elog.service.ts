@@ -254,6 +254,10 @@ export class CronElogService {
         status = OrdersStatus.DRIVER_FOUND;
         delivStatus = OrdersServiceStatus.Confirmed;
         break;
+      case 'ON_GOING':
+        status = OrdersStatus.DRIVER_FOUND;
+        delivStatus = OrdersServiceStatus.Allocated;
+        break;
       case 'GO_TO_LOCATION_PICKUP':
         status = OrdersStatus.DRIVER_FOUND;
         delivStatus = OrdersServiceStatus.Allocated;
