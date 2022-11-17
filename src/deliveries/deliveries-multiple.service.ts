@@ -265,6 +265,8 @@ export class DeliveriesMultipleService {
         waybill_id: orderDelivery.data.airway_bill,
         tracking_url: orderDelivery.data.tracking_url,
         logistic_platform: natsdata.logistic_platform,
+        driver_name: orderDelivery.data.driver_name,
+        driver_phone: orderDelivery.data.driver_phone_no,
       };
       console.log('SAVE TO DELIVERIES ORDER TABLE');
       console.log(deliveryData);
@@ -419,6 +421,10 @@ export class DeliveriesMultipleService {
       case 'CONFIRMED':
         status = OrdersStatus.DRIVER_FOUND;
         delivStatus = OrdersServiceStatus.Confirmed;
+        break;
+      case 'ON_GOING':
+        status = OrdersStatus.DRIVER_FOUND;
+        delivStatus = OrdersServiceStatus.Allocated;
         break;
       case 'GO_TO_LOCATION_PICKUP':
         status = OrdersStatus.DRIVER_FOUND;
