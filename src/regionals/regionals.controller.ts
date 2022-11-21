@@ -19,8 +19,8 @@ export class RegionalsController {
 
   //** ADD REGIONAL ELOG */
   @Get('/regionals')
-  @UserTypeAndLevel('admin.*')
-  @AuthJwtGuard()
+  // @UserTypeAndLevel('admin.*')
+  // @AuthJwtGuard()
   @ResponseStatusCode()
   async getAllRegionals(@Query() data: RegionalsDTO): Promise<RSuccessMessage> {
     try {
