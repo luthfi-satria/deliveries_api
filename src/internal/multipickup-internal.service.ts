@@ -101,7 +101,7 @@ export class InternalMultipickupService {
     this.logger.log(response, 'ELOG DATA RESPONSES');
 
     //** SAVE RATES ELOG */
-    this.thirdPartyRequestsRepository.save({ code, request, response });
+    await this.thirdPartyRequestsRepository.save({ code, request, response });
 
     //** BACK TO GET RESPONSE */
     return response;

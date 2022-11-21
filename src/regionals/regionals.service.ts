@@ -34,7 +34,11 @@ export class RegionalsService {
 
       let qry = {};
       if (data.search) qry = { ...qry, regional_name: ILike(`%${search}%`) };
-      if (data.status) qry = { ...qry, status: data.status };
+      if (data.status)
+        qry = {
+          ...qry,
+          status: data.status ? data.status : true ? data.status : false,
+        };
 
       const existing = await this.elogRepository.count();
 
