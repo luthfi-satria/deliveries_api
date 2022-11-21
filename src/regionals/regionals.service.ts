@@ -37,7 +37,13 @@ export class RegionalsService {
       if (data.status)
         qry = {
           ...qry,
-          status: data.status ? data.status : true ? data.status : false,
+          status: data.status
+            ? data.status
+            : true
+            ? data.status
+            : false
+            ? data.status
+            : null,
         };
 
       const existing = await this.elogRepository.count();
