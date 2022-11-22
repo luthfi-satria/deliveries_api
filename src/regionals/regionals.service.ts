@@ -72,7 +72,8 @@ export class RegionalsService {
         .createQueryBuilder()
         .where(qry)
         .take(perLimit)
-        .skip(offset);
+        .skip(offset)
+        .orderBy('regional_name');
 
       const [getAllRegionals, totalRows] = await RegionalList.getManyAndCount();
 
