@@ -37,20 +37,16 @@ export class RegionalsService {
       if (data.status)
         qry = {
           ...qry,
-          status: data.status
-            ? data.status
-            : true
-            ? data.status
-            : false
-            ? data.status
-            : null,
+          status: data.status ? data.status : true ? data.status : false,
         };
 
       const existing = await this.elogRepository.count();
+      console.log(existing);
 
       if (existing == 0) {
         // initialize insert into deliveries_elog_couriers
         const allCities = await this.getAllCities();
+        console.log(allCities);
         const bulkInsert: elogDocuments[] = [];
         if (allCities && allCities.data.items) {
           allCities.data.items.forEach((rows) => {
