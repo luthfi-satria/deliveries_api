@@ -78,10 +78,7 @@ export class CronElogService {
             service_status: status.deliveryStatus,
           });
 
-          if (
-            reqData[Rows.id].status != status.orderStatus &&
-            reqData[Rows.id].service_status != status.deliveryStatus
-          ) {
+          if (reqData[Rows.id].service_status != status.deliveryStatus) {
             DeliveryHistory.push({
               order_id: reqData[Rows.id].id,
               status: status.orderStatus,
@@ -230,18 +227,16 @@ export class CronElogService {
         },
       };
 
-      const url = `${process.env.BASEURL_ORDERS_SERVICE}/api/v1/orders/internal/update-multipickup-bulk`;
+      const url = `${process.env.BASEURL_ORDERS_SERVICE}/api/v1/orders/internal/multiple/update-status-bulk`;
       const targetStatus = await firstValueFrom(
-        this.httpService
-          .put(url, { orders_orders_group: reqData }, headerRequest)
-          .pipe(
-            map((resp) => resp.data),
-            catchError(() => {
-              throw new ForbiddenException(
-                `Order service: ${url} is not available`,
-              );
-            }),
-          ),
+        this.httpService.put(url, reqData, headerRequest).pipe(
+          map((resp) => resp.data),
+          catchError(() => {
+            throw new ForbiddenException(
+              `Order service: ${url} is not available`,
+            );
+          }),
+        ),
       );
 
       return targetStatus;
@@ -256,6 +251,10 @@ export class CronElogService {
       case 'CONFIRMED':
         status = OrdersStatus.DRIVER_FOUND;
         delivStatus = OrdersServiceStatus.Confirmed;
+        break;
+      case 'ON_GOING':
+        status = OrdersStatus.DRIVER_FOUND;
+        delivStatus = OrdersServiceStatus.Allocated;
         break;
       case 'GO_TO_LOCATION_PICKUP':
         status = OrdersStatus.DRIVER_FOUND;

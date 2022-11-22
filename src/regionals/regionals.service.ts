@@ -8,7 +8,7 @@ import { CommonService } from 'src/common/common.service';
 import { elogDocuments } from 'src/elog/entities/elog.entities';
 import { ElogRepository } from 'src/elog/repository/elog.repository';
 import { MessageService } from 'src/message/message.service';
-import { ListResponse } from 'src/response/response.interface';
+import { ListResponse, RMessage } from 'src/response/response.interface';
 import { ResponseService } from 'src/response/response.service';
 import { ILike } from 'typeorm';
 import { RegionalsDTO } from './dto/regionals.dto';
@@ -24,6 +24,7 @@ export class RegionalsService {
     private readonly commonService: CommonService,
   ) {}
 
+  //** REGIONALS */
   async getAllRegionals(data: RegionalsDTO) {
     try {
       const search = data.search || null;
@@ -33,7 +34,17 @@ export class RegionalsService {
 
       let qry = {};
       if (data.search) qry = { ...qry, regional_name: ILike(`%${search}%`) };
-      if (data.status) qry = { ...qry, status: data.status };
+      if (data.status)
+        qry = {
+          ...qry,
+          status: data.status
+            ? data.status
+            : true
+            ? data.status
+            : false
+            ? data.status
+            : null,
+        };
 
       const existing = await this.elogRepository.count();
 
@@ -61,7 +72,8 @@ export class RegionalsService {
         .createQueryBuilder()
         .where(qry)
         .take(perLimit)
-        .skip(offset);
+        .skip(offset)
+        .orderBy('regional_name');
 
       const [getAllRegionals, totalRows] = await RegionalList.getManyAndCount();
 
@@ -91,6 +103,50 @@ export class RegionalsService {
     }
   }
 
+  //** REGIONALS DETAILS */
+  async detailRegionals(regionals_id): Promise<any> {
+    try {
+      const query = await this.elogRepository.findOne({
+        where: { id: regionals_id },
+      });
+
+      if (!query) {
+        const errors: RMessage = {
+          value: regionals_id.id,
+          property: 'regionals_id',
+          constraint: [
+            this.messageService.get('Data regionals tidak dapat ditemukan.'),
+          ],
+        };
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            errors,
+            'Bad Request',
+          ),
+        );
+      }
+      return query;
+    } catch (error) {
+      this.logger.log(error);
+      throw new BadRequestException(
+        this.responseService.error(
+          HttpStatus.BAD_REQUEST,
+          {
+            value: '',
+            property: '',
+            constraint: [
+              this.messageService.get('delivery.general.fail'),
+              error.message,
+            ],
+          },
+          'Bad Request',
+        ),
+      );
+    }
+  }
+
+  //** UPDATED REGIONALS */
   async updatedStatus(param): Promise<any> {
     try {
       const updateQuery = await this.elogRepository

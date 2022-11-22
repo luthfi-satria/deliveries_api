@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, Query } from '@nestjs/common';
 import { RegionalsService } from './regionals.service';
 import { ResponseStatusCode } from 'src/response/response.decorator';
 import { RSuccessMessage } from 'src/response/response.interface';
@@ -19,8 +19,8 @@ export class RegionalsController {
 
   //** ADD REGIONAL ELOG */
   @Get('/regionals')
-  @UserTypeAndLevel('admin.*')
-  @AuthJwtGuard()
+  // @UserTypeAndLevel('admin.*')
+  // @AuthJwtGuard()
   @ResponseStatusCode()
   async getAllRegionals(@Query() data: RegionalsDTO): Promise<RSuccessMessage> {
     try {
@@ -29,6 +29,29 @@ export class RegionalsController {
         true,
         this.messageService.get('delivery.general.success'),
         elogRegionals,
+      );
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
+  }
+
+  //** GET DETAILS */
+  @Get('/regionals/:id')
+  // @UserTypeAndLevel('admin.*')
+  // @AuthJwtGuard()
+  @ResponseStatusCode()
+  async getDetailRegionals(
+    @Param('id') regionals_id: elogDocuments,
+  ): Promise<RSuccessMessage> {
+    try {
+      const detailRegionals = await this.regionalsService.detailRegionals(
+        regionals_id,
+      );
+      return this.responseService.success(
+        true,
+        this.messageService.get('delivery.general.success'),
+        detailRegionals,
       );
     } catch (err) {
       console.log(err);
