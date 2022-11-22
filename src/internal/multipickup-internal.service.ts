@@ -8,6 +8,7 @@ import {
 import { AxiosResponse } from 'axios';
 import { unescape } from 'querystring';
 import { firstValueFrom, map } from 'rxjs';
+import { CommonService } from 'src/common/common.service';
 import { CourierRepository } from 'src/database/repository/couriers.repository';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
@@ -23,6 +24,7 @@ export class InternalMultipickupService {
     private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
     private readonly courierRepository: CourierRepository,
     private readonly responseService: ResponseService,
+    private readonly commonService: CommonService,
   ) {}
 
   logger = new Logger();
@@ -99,7 +101,7 @@ export class InternalMultipickupService {
     this.logger.log(response, 'ELOG DATA RESPONSES');
 
     //** SAVE RATES ELOG */
-    this.thirdPartyRequestsRepository.save({ code, request, response });
+    await this.thirdPartyRequestsRepository.save({ code, request, response });
 
     //** BACK TO GET RESPONSE */
     return response;
@@ -184,16 +186,21 @@ export class InternalMultipickupService {
     };
 
     //** EXECUTE BY AXIOS DATA */
-    const get_request = this.httpService
-      .post(urlDeliveryElog, data, { headers: headerRequest })
-      .pipe(
-        map((axiosResponse: AxiosResponse) => {
-          return axiosResponse.data;
-        }),
-      );
+    const getDriver: any = await this.commonService
+      .postHttp(urlDeliveryElog, data, headerRequest)
+      .catch((err1) => {
+        console.error(err1);
+        throw new BadRequestException(
+          this.responseService.error(
+            HttpStatus.BAD_REQUEST,
+            err1,
+            'Bad Request',
+          ),
+        );
+      });
 
-    const response = await firstValueFrom(get_request);
-    this.logger.log(response, 'ELOG CHECK DRIVER RESPONSES');
-    return response;
+    console.log(getDriver);
+    this.logger.log(getDriver, 'ELOG CHECK DRIVER RESPONSES');
+    return getDriver;
   }
 }

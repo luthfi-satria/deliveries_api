@@ -34,7 +34,17 @@ export class RegionalsService {
 
       let qry = {};
       if (data.search) qry = { ...qry, regional_name: ILike(`%${search}%`) };
-      if (data.status) qry = { ...qry, status: data.status };
+      if (data.status)
+        qry = {
+          ...qry,
+          status: data.status
+            ? data.status
+            : true
+            ? data.status
+            : false
+            ? data.status
+            : null,
+        };
 
       const existing = await this.elogRepository.count();
 
@@ -62,7 +72,8 @@ export class RegionalsService {
         .createQueryBuilder()
         .where(qry)
         .take(perLimit)
-        .skip(offset);
+        .skip(offset)
+        .orderBy('regional_name');
 
       const [getAllRegionals, totalRows] = await RegionalList.getManyAndCount();
 
