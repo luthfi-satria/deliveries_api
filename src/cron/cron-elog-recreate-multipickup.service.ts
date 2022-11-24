@@ -253,8 +253,7 @@ export class CronElogRecreateMultipickupService {
           'response_payload',
         ])
         .where('logistic_platform = :platform', { platform: 'ELOG' })
-        .where(`created_at > now() - (20 * interval '1 minute') `)
-        .where('logistic_platform = :logistic', { logistic: 'ELOG' })
+        .andWhere(`created_at > (now() - (20 * interval '1 minute'))`)
         .andWhere('service_status IN (:...status)', {
           status: [OrdersServiceStatus.Placed],
         })
