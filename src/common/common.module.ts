@@ -23,6 +23,7 @@ import { SettingsRepository } from 'src/database/repository/settings.repository'
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { DeliveriesMultipleService } from 'src/deliveries/deliveries-multiple.service';
 import { ElogService } from 'src/elog/elog.service';
+import { DeliveriesMultipleDummyService } from 'src/deliveries/deliveries-multiple-dummy.service';
 
 @Global()
 @Module({
@@ -74,6 +75,7 @@ import { ElogService } from 'src/elog/elog.service';
     CouriersService,
     NatsService,
     ElogService,
+    DeliveriesMultipleDummyService,
   ],
   exports: [CommonStorageService, NotificationService, FetchCourierService],
   controllers: [NatsController],

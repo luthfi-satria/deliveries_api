@@ -10,6 +10,7 @@ import {
 } from 'src/database/entities/orders.entity';
 import { unescape } from 'querystring';
 import { ElogService } from 'src/elog/elog.service';
+import { CronElogRecreateMultipickupService } from './cron-elog-recreate-multipickup.service';
 
 @Injectable()
 export class CronElogService {
@@ -18,6 +19,7 @@ export class CronElogService {
     private readonly deliveryRepo: OrdersRepository,
     private readonly elogService: ElogService,
     private readonly deliveryHistoryRepo: OrderHistoriesRepository,
+    private readonly recreateMultipickupService: CronElogRecreateMultipickupService,
   ) {}
 
   private readonly logger = new Logger(CronElogService.name);
@@ -29,6 +31,7 @@ export class CronElogService {
   async retrieveElogStatus() {
     this.logger.log('---- STARTING CRON JOBS -----');
     await this.updateElogStatus();
+    await this.recreateMultipickupService.recreateDeliveriesOrders();
   }
 
   /**
