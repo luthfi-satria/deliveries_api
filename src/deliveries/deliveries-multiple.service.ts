@@ -23,6 +23,10 @@ import {
   OrderHistoriesStatus,
 } from 'src/database/entities/orders-history.entity';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
+import { Queue } from 'bull';
+import { InjectQueue, OnGlobalQueueWaiting } from '@nestjs/bull';
+import { RMessage } from 'src/response/response.interface';
+import { DeliveriesMultipleDummyService } from './deliveries-multiple-dummy.service';
 
 @Injectable()
 export class DeliveriesMultipleService {
@@ -35,6 +39,8 @@ export class DeliveriesMultipleService {
     private readonly natsService: NatsService,
     private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
     private readonly orderHistoriesRepository: OrderHistoriesRepository,
+    private readonly dummyDeliveriesData: DeliveriesMultipleDummyService,
+    @InjectQueue('deliveries') private readonly deliveriesQueue: Queue,
   ) {}
 
   logger = new Logger();
@@ -188,6 +194,7 @@ export class DeliveriesMultipleService {
     };
 
     const headersData = {
+      group_id: natsdata.group_id,
       headerRequest: headerRequest,
       url: urlDeliveryElog,
     };
@@ -211,6 +218,7 @@ export class DeliveriesMultipleService {
 
         this.thirdPartyRequestsRepository.save({
           request: {
+            group_id: headersData.group_id,
             logistic_platform: 'elog',
             header: headersData.headerRequest,
             url: headersData.url,
@@ -222,6 +230,9 @@ export class DeliveriesMultipleService {
 
         //** IF ERROR */
         await this.saveNegativeResultOrder(deliveryData, err);
+
+        this.logger.log('CREATE ERROR QUEUE PAYLOAD');
+        await this.addErrorQueue(elogData, headersData, natsdata);
       });
     // const orderDelivery = this.dummyOrderDelivery();
     if (orderDelivery) {
@@ -231,12 +242,17 @@ export class DeliveriesMultipleService {
       await this.saveToThirdPartyRequest(headersData, elogData, orderDelivery);
 
       await this.saveToDeliveryOrders(orderDelivery, natsdata);
+
+      // remove queue
+      await this.removeElogQueue(natsdata.group_id);
     }
   }
 
   async saveToThirdPartyRequest(headersData, elogData, orderDelivery) {
     //** EXECUTE CREATE ORDER BY POST */
     const request = {
+      group_id: headersData.group_id,
+      logistic_platform: 'elog',
       header: headersData.headerRequest,
       url: headersData.url,
       data: elogData,
@@ -415,6 +431,47 @@ export class DeliveriesMultipleService {
     return cancelOrderDelivery;
   }
 
+  async addErrorQueue(elogData, headersData, natsData) {
+    try {
+      await this.deliveriesQueue.add(
+        {
+          elogUrl: headersData.url,
+          elogData: elogData,
+          elogHeaders: headersData.headerRequest,
+          natsData: natsData,
+          counter: 1,
+        },
+        {
+          jobId: `elogsPendingQueue_${headersData.group_id}`,
+        },
+      );
+    } catch (error) {
+      console.error(error);
+      this.errorHandler(error);
+    }
+  }
+
+  @OnGlobalQueueWaiting()
+  async removeElogQueue(id: string) {
+    const getJob = await this.deliveriesQueue.getJob(`elogsPendingQueue_${id}`);
+
+    await getJob?.remove();
+  }
+
+  errorHandler(error) {
+    const errors: RMessage = {
+      value: '',
+      property: '',
+      constraint: [
+        this.messageService.get('general.redis.createQueueFail'),
+        error.message,
+      ],
+    };
+    throw new BadRequestException(
+      this.responseService.error(HttpStatus.BAD_REQUEST, errors, 'Bad Request'),
+    );
+  }
+
   statusConverter(status: string) {
     let delivStatus = OrdersServiceStatus.Confirmed;
     switch (status) {
@@ -465,67 +522,39 @@ export class DeliveriesMultipleService {
     };
   }
 
-  dummyOrderDelivery() {
-    return {
-      status: 'success',
-      message: 'Berhasil membuat order.',
-      data: {
-        id: '20915f8c-0553-485c-867b-f10d79f26ad4',
-        airway_bill: 'ELN13012111600001',
-        tracking_url:
-          'https://dev.elog.co.id/tracking/20915f8c-0553-485c-867b-f10d79f26ad4',
-        delivery_type: 'INSTANT',
-        status: 'CONFIRMED',
-        pickup_destinations: [
-          {
-            id: 'fd301087-32fe-4504-a4a8-351c31596f80',
-            longitude: 107.59653259049831,
-            latitude: -6.877444678496585,
-            contact_name: 'Richeese Factory Flamboyan ',
-            contact_phone: '6282214863662',
-            address:
-              'Jl. Sukajadi No.234, Gegerkalong, Kec. Sukasari, Kota Bandung, Jawa Barat 40153',
-            address_name: 'Richeese Factory Flamboyan ',
-            location_description: '',
-            note: '',
-            destination_order: 0,
-            items: [
-              {
-                name: 'Combo Rich Burger - Beef',
-                weight: 1,
-                quantity: 1,
-                price: 48000,
-                note: null,
-              },
-            ],
-            external_id: null,
-          },
-        ],
-        dropoff_destinations: [
-          {
-            id: 'c34d3a23-1040-46d5-b078-3d2d4307bb2a',
-            longitude: 107.5785705,
-            latitude: -6.8905558,
-            contact_name: 'Fatkhur Roni',
-            contact_phone: '6285648636747',
-            address:
-              'WU Tower, Jalan Doktor Djunjunan, Sukawarna, Bandung City, West Java, Indonesia',
-            address_name: 'kantor',
-            location_description: '',
-            note: '',
-            destination_order: 1,
-          },
-        ],
-      },
-    };
-  }
+  async createDummyQueue() {
+    const list_group_id = [
+      'de2af395-c500-4ece-8bcb-be70ea61a5d7',
+      '459e1172-3931-4cc0-938c-0ddb91226b66',
+    ];
 
-  dummyOrderFailed() {
-    return {
-      status: 'error',
-      error: 'ERR_NOT_FOUND',
-      message: 'Tidak dapat menemukan pengemudi di sekitar anda',
-      data: null,
+    const elogSettings = await this.getElogSettings();
+    const elogUrl = elogSettings['elog_api_url'][0];
+    const elogUsername = elogSettings['elog_username'][0];
+    const elogPassword = elogSettings['elog_password'][0];
+
+    //** EXECUTE CREATE ORDER BY POST */
+    const urlDeliveryElog = `${elogUrl}/openapi/v0/order/send`;
+    const headerRequest = {
+      'Content-Type': 'application/json',
+      Authorization:
+        'basic ' +
+        btoa(unescape(encodeURIComponent(elogUsername + ':' + elogPassword))),
     };
+
+    list_group_id.forEach(async (rows) => {
+      await this.deliveriesQueue.add(
+        {
+          elogUrl: urlDeliveryElog,
+          elogData: this.dummyDeliveriesData.dummyElogData(),
+          elogHeaders: headerRequest,
+          natsData: this.dummyDeliveriesData.dummyNatsData(rows),
+          counter: 1,
+        },
+        {
+          jobId: `elogsPendingQueue_${rows}`,
+        },
+      );
+    });
   }
 }
