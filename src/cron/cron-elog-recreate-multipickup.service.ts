@@ -82,7 +82,7 @@ export class CronElogRecreateMultipickupService {
 
             const elogResponse = await this.callElogApis(group_id, queueData);
             // const elogResponse =
-            //   this.dummyDeliveriesMultiPickupData.dummyOrderFailed();
+            //   this.dummyDeliveriesMultiPickupData.dummyOrderDelivery();
 
             // JIKA BERHASIL CREATE ORDER
             if (elogResponse && elogResponse.status == 'success') {
@@ -110,7 +110,7 @@ export class CronElogRecreateMultipickupService {
                 id: rows.id,
                 order_id: rows.order_id,
                 delivery_id: elogResponse.data.id,
-                price: rows.ongkir,
+                price: rows.price,
                 response_payload: elogResponse,
                 status: status.orderStatus,
                 service_status: status.deliveryStatus,

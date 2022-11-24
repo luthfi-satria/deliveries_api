@@ -53,6 +53,8 @@ export class DeliveriesMultipleDummyService {
             destination_order: 1,
           },
         ],
+        driver_name: 'test',
+        driver_phone_no: '123456789',
       },
     };
   }
