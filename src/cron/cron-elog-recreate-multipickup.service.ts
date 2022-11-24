@@ -77,7 +77,7 @@ export class CronElogRecreateMultipickupService {
             `CHECKING elogsPendingQueue_${group_id} JOBS COUNTER: ${queueData.counter}`,
           );
           // JIKA COUNTER KURANG DARI 3
-          if (queueData.counter < 4) {
+          if (queueData.counter < 3) {
             this.logger.log(`CALL ELOG APIS: elogsPendingQueue_${group_id}`);
 
             const elogResponse = await this.callElogApis(group_id, queueData);
@@ -265,6 +265,13 @@ export class CronElogRecreateMultipickupService {
   }
 
   async callElogApis(group_id, queueData) {
+    this.logger.log('REQUESTING ELOG APIS');
+    console.log({
+      url: queueData.elogUrl,
+      data: queueData.elogData,
+      headers: queueData.headerRequest,
+    });
+
     const orderDelivery: any = await this.commonService
       .postHttp(queueData.elogUrl, queueData.elogData, queueData.headerRequest)
       .catch(async (err) => {
