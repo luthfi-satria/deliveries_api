@@ -267,11 +267,7 @@ export class CronElogRecreateMultipickupService {
 
   async callElogApis(group_id, queueData) {
     const orderDelivery: any = await this.commonService
-      .postHttp(
-        queueData.elogUrl,
-        queueData.elogData,
-        queueData.headersData.headerRequest,
-      )
+      .postHttp(queueData.elogUrl, queueData.elogData, queueData.headerRequest)
       .catch(async (err) => {
         const deliveryData: Partial<OrdersDocument> = {
           order_id: group_id,
