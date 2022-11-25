@@ -19,8 +19,8 @@ export class RegionalsController {
 
   //** ADD REGIONAL ELOG */
   @Get('/regionals')
-  // @UserTypeAndLevel('admin.*')
-  // @AuthJwtGuard()
+  @UserTypeAndLevel('admin.*')
+  @AuthJwtGuard()
   @ResponseStatusCode()
   async getAllRegionals(@Query() data: RegionalsDTO): Promise<RSuccessMessage> {
     try {
@@ -38,8 +38,8 @@ export class RegionalsController {
 
   //** GET DETAILS */
   @Get('/regionals/:id')
-  // @UserTypeAndLevel('admin.*')
-  // @AuthJwtGuard()
+  @UserTypeAndLevel('admin.*')
+  @AuthJwtGuard()
   @ResponseStatusCode()
   async getDetailRegionals(
     @Param('id') regionals_id: elogDocuments,
