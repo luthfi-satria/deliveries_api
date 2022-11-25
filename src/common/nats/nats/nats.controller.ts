@@ -34,9 +34,9 @@ export class NatsController {
   }
 
   //** Deliveries Multipickup Elog Reordered */
-  @EventPattern('orders.order.multipickupreordered')
+  @EventPattern('orders.delivery.multipickupreordered')
   async deliveryReorderedMultipickup(@Payload() data: any) {
-    this.logger.log('orders.order.multipickupreordered');
+    this.logger.log('orders.delivery.multipickupreordered');
     data.delivery_status = 'DRIVER_NOT_FOUND';
     this.deliveriesMultipleService.createMultipleOrder(data);
   }

@@ -14,6 +14,7 @@ import { ThirdPartyRequestsRepository } from 'src/database/repository/third-part
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { SettingService } from 'src/setting/setting.service';
+import { DeliveriesMultipleDummyService } from './deliveries-multiple-dummy.service';
 import { DeliveriesMultipleService } from './deliveries-multiple.service';
 import { DeliveriesController } from './deliveries.controller';
 import { DeliveriesService } from './deliveries.service';
@@ -43,6 +44,7 @@ import { DeliveriesService } from './deliveries.service';
     NatsService,
     SettingService,
     RedisDeliveryService,
+    DeliveriesMultipleDummyService,
   ],
 })
 export class DeliveriesModule {}
