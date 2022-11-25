@@ -96,7 +96,7 @@ export class CronElogRecreateMultipickupService {
                 request: {
                   group_id: rows.group_id,
                   logistic_platform: rows.logistic_platform,
-                  header: queueData.headerRequest,
+                  header: queueData.elogHeaders,
                   url: queueData.elogUrl,
                   data: queueData.elogData,
                   method: 'POST',
