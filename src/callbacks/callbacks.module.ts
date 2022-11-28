@@ -18,6 +18,8 @@ import { SettingsRepository } from 'src/database/repository/settings.repository'
 import { BullModule } from '@nestjs/bull';
 import { ThirdPartyCallbacksRepository } from 'src/database/repository/third-party-callback.repository';
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
+import { DeliveriesMultipleService } from 'src/deliveries/deliveries-multiple.service';
+import { DeliveriesMultipleDummyService } from 'src/deliveries/deliveries-multiple-dummy.service';
 
 @Module({
   imports: [
@@ -45,6 +47,8 @@ import { ThirdPartyRequestsRepository } from 'src/database/repository/third-part
     CommonService,
     SettingService,
     RedisDeliveryService,
+    DeliveriesMultipleService,
+    DeliveriesMultipleDummyService,
   ],
 })
 export class CallbacksModule {}

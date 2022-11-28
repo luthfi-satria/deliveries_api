@@ -11,6 +11,8 @@ import { OrderHistoriesRepository } from 'src/database/repository/orders-history
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
+import { DeliveriesMultipleDummyService } from 'src/deliveries/deliveries-multiple-dummy.service';
+import { DeliveriesMultipleService } from 'src/deliveries/deliveries-multiple.service';
 import { DeliveriesService } from 'src/deliveries/deliveries.service';
 import { ElogService } from 'src/elog/elog.service';
 import { ElogRepository } from 'src/elog/repository/elog.repository';
@@ -52,6 +54,8 @@ import { InternalMultipickupService } from './multipickup-internal.service';
     DeliveriesService,
     NatsService,
     ElogService,
+    DeliveriesMultipleService,
+    DeliveriesMultipleDummyService,
   ],
   exports: [AuthInternalService],
 })
