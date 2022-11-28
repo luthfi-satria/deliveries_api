@@ -22,7 +22,7 @@ import { CommonService } from 'src/common/common.service';
 import { DeliveriesMultipleService } from 'src/deliveries/deliveries-multiple.service';
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { NatsService } from 'src/common/nats/nats/nats.service';
-import { DeliveriesMultipleDummyService } from 'src/deliveries/deliveries-multiple-dummy.service';
+// import { DeliveriesMultipleDummyService } from 'src/deliveries/deliveries-multiple-dummy.service';
 
 @Injectable()
 export class CronElogRecreateMultipickupService {
@@ -34,7 +34,7 @@ export class CronElogRecreateMultipickupService {
     private readonly commonService: CommonService,
     private readonly deliveriesMultipleService: DeliveriesMultipleService,
     private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
-    private readonly dummyDeliveriesMultiPickupData: DeliveriesMultipleDummyService,
+    // private readonly dummyDeliveriesMultiPickupData: DeliveriesMultipleDummyService,
     private readonly natsService: NatsService,
     @InjectQueue('deliveries') private readonly deliveriesQueue: Queue,
   ) {}
@@ -269,11 +269,11 @@ export class CronElogRecreateMultipickupService {
     console.log({
       url: queueData.elogUrl,
       data: queueData.elogData,
-      headers: queueData.headerRequest,
+      headers: queueData.elogHeaders,
     });
 
     const orderDelivery: any = await this.commonService
-      .postHttp(queueData.elogUrl, queueData.elogData, queueData.headerRequest)
+      .postHttp(queueData.elogUrl, queueData.elogData, queueData.elogHeaders)
       .catch(async (err) => {
         const deliveryData: Partial<OrdersDocument> = {
           order_id: group_id,
