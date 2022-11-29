@@ -243,8 +243,13 @@ export class DeliveriesMultipleService {
 
       await this.saveToDeliveryOrders(orderDelivery, natsdata);
 
-      // remove queue
-      await this.removeElogQueue(natsdata.group_id);
+      if (orderDelivery.status == OrdersServiceStatus.Cancelled) {
+        this.logger.log('FINDING DRIVER (AFTER CANCELLING) QUEUE PAYLOAD');
+        await this.addErrorQueue(elogData, headersData, natsdata);
+      } else {
+        // remove queue
+        await this.removeElogQueue(natsdata.group_id);
+      }
     }
   }
 
