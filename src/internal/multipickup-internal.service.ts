@@ -44,6 +44,7 @@ export class InternalMultipickupService {
     const ids = data.courier_id;
     const values = await this.searchCourierElog(ids);
     const code = values[0].code;
+    console.log(code);
 
     //** LOOP FOR CREATE MULTI PICKUP */
     for (let index = 0; index < data.pickup_destinations.length; index++) {
@@ -89,6 +90,7 @@ export class InternalMultipickupService {
 
     //** REQUEST DATA */
     const request = {
+      logistic_platform: 'ELOG',
       header: headerRequest,
       urlDeliveryElog,
       body: data,
@@ -101,7 +103,7 @@ export class InternalMultipickupService {
     this.logger.log(response, 'ELOG DATA RESPONSES');
 
     //** SAVE RATES ELOG */
-    await this.thirdPartyRequestsRepository.save({ code, request, response });
+    await this.thirdPartyRequestsRepository.save({ request, response });
 
     //** BACK TO GET RESPONSE */
     return response;
