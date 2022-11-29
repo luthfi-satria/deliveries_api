@@ -376,7 +376,7 @@ export class DeliveriesMultipleService {
     const elogPassword = elogSettings['elog_password'][0];
 
     //** EXECUTE CREATE ORDER BY POST */
-    const urlDeliveryElog = `${elogUrl}/openapi/v0/order/send`;
+    const urlDeliveryElog = `${elogUrl}/openapi/v0/order/send/${orderDelivery.delivery_id}`;
     const headerRequest = {
       'Content-Type': 'application/json',
       Authorization:
@@ -395,8 +395,8 @@ export class DeliveriesMultipleService {
             HttpStatus.BAD_REQUEST,
             {
               value: order_id,
-              property: 'order_id',
-              constraint: [err1.error],
+              property: 'delivery_id',
+              constraint: [err1.message],
             },
             'Bad Request',
           ),
