@@ -206,6 +206,7 @@ export class DeliveriesMultipleService {
         const deliveryData: Partial<OrdersDocument> = {
           order_id: natsdata.group_id,
           status: OrdersStatus.DRIVER_NOT_FOUND,
+          service_status: OrdersServiceStatus.Placed,
           response_payload: err,
           logistic_platform: natsdata.logistic_platform,
         };
@@ -230,9 +231,6 @@ export class DeliveriesMultipleService {
 
         //** IF ERROR */
         await this.saveNegativeResultOrder(deliveryData, err);
-
-        this.logger.log('CREATE ERROR QUEUE PAYLOAD');
-        await this.addErrorQueue(elogData, headersData, natsdata);
       });
     // const orderDelivery = this.dummyOrderDelivery();
     if (orderDelivery) {
@@ -243,14 +241,10 @@ export class DeliveriesMultipleService {
 
       await this.saveToDeliveryOrders(orderDelivery, natsdata);
 
-      const status = this.statusConverter(orderDelivery.data.status);
-      if (status.deliveryStatus == OrdersServiceStatus.Placed) {
-        this.logger.log('FINDING DRIVER (AFTER CANCELLING) QUEUE PAYLOAD');
-        await this.addErrorQueue(elogData, headersData, natsdata);
-      } else {
-        // remove queue
-        await this.removeElogQueue(natsdata.group_id);
-      }
+      this.logger.log('CREATE ERROR QUEUE PAYLOAD');
+      await this.addErrorQueue(elogData, headersData, natsdata);
+      // remove queue
+      // await this.removeElogQueue(natsdata.group_id);
     }
   }
 
