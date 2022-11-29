@@ -512,8 +512,8 @@ export class DeliveriesMultipleService {
         delivStatus = OrdersServiceStatus.Delivered;
         break;
       case 'CANCELLED':
-        status = OrdersStatus.CANCELLED;
-        delivStatus = OrdersServiceStatus.Cancelled;
+        status = OrdersStatus.DRIVER_NOT_FOUND;
+        delivStatus = OrdersServiceStatus.Placed;
         break;
     }
     return {
