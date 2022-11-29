@@ -130,25 +130,14 @@ export class CronElogRecreateMultipickupService {
               };
               historyObj.push(historyData);
 
-              // REMOVE REDIS CACHE
+              // RECREATE CACHING
+              await this.recreateCaching(queueData, group_id);
               // await this.deliveriesMultipleService.removeElogQueue(group_id);
             }
             // JIKA GAGAL CREATE ORDER
             // RECREATE REDIS CACHE
             else {
-              this.logger.log(`DRIVER NOT FOUND: RECREATE QUEUE CACHING`);
-              const redisCache = {
-                elogUrl: queueData.elogUrl,
-                elogData: queueData.elogData,
-                elogHeaders: queueData.elogHeaders,
-                natsData: queueData.natsData,
-                counter: queueData.counter + 1,
-              };
-              this.logger.log(`elogsPendingQueue_${group_id}`);
-              console.log(redisCache);
-
-              // RECREATE CACHING!!
-              await this.addErrorQueue(redisCache, group_id);
+              await this.recreateCaching(queueData, group_id);
             }
           }
           // BATALKAN ORDERS JIKA LEBIH DARI 3X
@@ -335,6 +324,22 @@ export class CronElogRecreateMultipickupService {
     throw new BadRequestException(
       this.responseService.error(HttpStatus.BAD_REQUEST, errors, 'Bad Request'),
     );
+  }
+
+  async recreateCaching(queueData, group_id) {
+    this.logger.log(`DRIVER NOT FOUND: RECREATE QUEUE CACHING`);
+    const redisCache = {
+      elogUrl: queueData.elogUrl,
+      elogData: queueData.elogData,
+      elogHeaders: queueData.elogHeaders,
+      natsData: queueData.natsData,
+      counter: queueData.counter + 1,
+    };
+    this.logger.log(`elogsPendingQueue_${group_id}`);
+    console.log(redisCache);
+
+    // RECREATE CACHING!!
+    await this.addErrorQueue(redisCache, group_id);
   }
 
   async addErrorQueue(queueData, group_id) {
