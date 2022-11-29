@@ -243,7 +243,8 @@ export class DeliveriesMultipleService {
 
       await this.saveToDeliveryOrders(orderDelivery, natsdata);
 
-      if (orderDelivery.status == OrdersServiceStatus.Cancelled) {
+      const status = this.statusConverter(orderDelivery.data.status);
+      if (status.deliveryStatus == OrdersServiceStatus.Placed) {
         this.logger.log('FINDING DRIVER (AFTER CANCELLING) QUEUE PAYLOAD');
         await this.addErrorQueue(elogData, headersData, natsdata);
       } else {
