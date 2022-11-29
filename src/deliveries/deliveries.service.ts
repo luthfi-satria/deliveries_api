@@ -42,7 +42,10 @@ export class DeliveriesService {
   ) {}
 
   async createOrder(data: any) {
-    if (data.delivery_type == 'DELIVERY') {
+    if (
+      data.delivery_type == 'DELIVERY' &&
+      data.logistic_platform == 'BITESHIP'
+    ) {
       const courier = await this.couriersService.findOne(data.courier_id);
       if (!courier) {
         const errContaint: any = {
