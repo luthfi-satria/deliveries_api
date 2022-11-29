@@ -131,7 +131,7 @@ export class CronElogRecreateMultipickupService {
               historyObj.push(historyData);
 
               // REMOVE REDIS CACHE
-              await this.deliveriesMultipleService.removeElogQueue(group_id);
+              // await this.deliveriesMultipleService.removeElogQueue(group_id);
             }
             // JIKA GAGAL CREATE ORDER
             // RECREATE REDIS CACHE
@@ -226,6 +226,9 @@ export class CronElogRecreateMultipickupService {
           },
         );
       }
+
+      // CLEAR REDIS CACHE
+      await this.clearRedisCacheForCancelAndCompletedStatus();
     }
   }
 
@@ -344,6 +347,43 @@ export class CronElogRecreateMultipickupService {
     } catch (error) {
       console.error(error);
       this.errorHandler(error);
+    }
+  }
+
+  async clearRedisCacheForCancelAndCompletedStatus() {
+    try {
+      this.logger.log('########## CLEARING REDIS CACHE ##########');
+      const DelivOrderData = await this.deliveryRepo
+        .createQueryBuilder()
+        .select([
+          'id',
+          'order_id',
+          'delivery_id',
+          'driver_name',
+          'driver_phone',
+          'tracking_url',
+          'status',
+          'service_status',
+        ])
+        .where('logistic_platform = :platform', { platform: 'ELOG' })
+        .andWhere(`created_at > date_trunc('day', now())`)
+        .andWhere('service_status IN (:...status)', {
+          status: [
+            OrdersServiceStatus.Cancelled,
+            OrdersServiceStatus.Delivered,
+          ],
+        })
+        .getRawMany();
+
+      if (DelivOrderData) {
+        for (const items in DelivOrderData) {
+          await this.deliveriesMultipleService.removeElogQueue(
+            DelivOrderData[items].order_id,
+          );
+        }
+      }
+    } catch (error) {
+      throw error;
     }
   }
 }
