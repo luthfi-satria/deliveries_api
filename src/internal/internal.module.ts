@@ -11,13 +11,19 @@ import { OrderHistoriesRepository } from 'src/database/repository/orders-history
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
+import { DeliveriesMultipleDummyService } from 'src/deliveries/deliveries-multiple-dummy.service';
+import { DeliveriesMultipleService } from 'src/deliveries/deliveries-multiple.service';
 import { DeliveriesService } from 'src/deliveries/deliveries.service';
+import { ElogService } from 'src/elog/elog.service';
+import { ElogRepository } from 'src/elog/repository/elog.repository';
 import { MessageService } from 'src/message/message.service';
 import { ResponseService } from 'src/response/response.service';
 import { SettingService } from 'src/setting/setting.service';
 import { AuthInternalService } from './auth-internal.service';
 import { InternalController } from './internal.controller';
 import { InternalService } from './internal.service';
+import { InternalMultipickupController } from './multipickup-internal.controller';
+import { InternalMultipickupService } from './multipickup-internal.service';
 
 @Module({
   imports: [
@@ -27,16 +33,18 @@ import { InternalService } from './internal.service';
       ThirdPartyRequestsRepository,
       OrderHistoriesRepository,
       SettingsRepository,
+      ElogRepository,
     ]),
     HttpModule,
     BullModule.registerQueue({
       name: 'deliveries',
     }),
   ],
-  controllers: [InternalController],
+  controllers: [InternalController, InternalMultipickupController],
   providers: [
     InternalService,
     AuthInternalService,
+    InternalMultipickupService,
     CommonService,
     ResponseService,
     RedisDeliveryService,
@@ -45,6 +53,9 @@ import { InternalService } from './internal.service';
     CouriersService,
     DeliveriesService,
     NatsService,
+    ElogService,
+    DeliveriesMultipleService,
+    DeliveriesMultipleDummyService,
   ],
   exports: [AuthInternalService],
 })

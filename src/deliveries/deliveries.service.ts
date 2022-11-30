@@ -23,6 +23,7 @@ import { OrdersRepository } from 'src/database/repository/orders.repository';
 import moment from 'moment';
 import { ResponseService } from 'src/response/response.service';
 import { MessageService } from 'src/message/message.service';
+import { DeliveriesMultipleService } from './deliveries-multiple.service';
 
 @Injectable()
 export class DeliveriesService {
@@ -37,10 +38,14 @@ export class DeliveriesService {
     private readonly messageService: MessageService,
     private readonly responseService: ResponseService,
     private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
+    private readonly deliveryMultipleService: DeliveriesMultipleService,
   ) {}
 
   async createOrder(data: any) {
-    if (data.delivery_type == 'DELIVERY') {
+    if (
+      data.delivery_type == 'DELIVERY' &&
+      data.logistic_platform == 'BITESHIP'
+    ) {
       const courier = await this.couriersService.findOne(data.courier_id);
       if (!courier) {
         const errContaint: any = {
@@ -184,7 +189,12 @@ export class DeliveriesService {
 
           this.saveNegativeResultOrder(deliveryData, err);
         });
-      const request = { header: headerRequest, url: urlDelivery, data: orderData, method: "POST" };
+      const request = {
+        header: headerRequest,
+        url: urlDelivery,
+        data: orderData,
+        method: 'POST',
+      };
       this.thirdPartyRequestsRepository.save({
         request,
         response: orderDelivery,
@@ -292,6 +302,11 @@ export class DeliveriesService {
         ),
       );
     }
+
+    if (orderDelivery.logistic_platform == 'ELOG') {
+      return await this.deliveryMultipleService.cancelMultipleOrder(order_id);
+    }
+
     const urlDelivery = `${process.env.BITESHIP_API_BASEURL}/v1/orders/${orderDelivery.delivery_id}`;
     const headerRequest = {
       'Content-Type': 'application/json',
@@ -316,7 +331,12 @@ export class DeliveriesService {
           ),
         );
       });
-    const request = { header: headerRequest, url: urlDelivery, data: data, method: "DELETE" };
+    const request = {
+      header: headerRequest,
+      url: urlDelivery,
+      data: data,
+      method: 'DELETE',
+    };
     this.thirdPartyRequestsRepository.save({
       request,
       response: cancelOrderDelivery,
