@@ -156,13 +156,13 @@ export class CronElogRecreateMultipickupService {
                 success: false,
                 message: 'CANCELLED BY SYSTEM',
               },
-              status: OrdersStatus.CANCELLED,
+              status: OrdersStatus.DRIVER_NOT_FOUND,
               service_status: OrdersServiceStatus.Cancelled,
-              waybill_id: rows.waybill_id,
-              tracking_url: rows.tracking_url,
+              waybill_id: null,
+              tracking_url: null,
               logistic_platform: rows.logistic_platform,
-              driver_name: rows.driver_name,
-              driver_phone: rows.driver_phone,
+              driver_name: null,
+              driver_phone: null,
             };
             deliveriesObj.push(deliveriesData);
 
