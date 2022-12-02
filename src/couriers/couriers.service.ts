@@ -73,6 +73,12 @@ export class CouriersService {
         });
       }
 
+      if (statuses) {
+        query.andWhere('couriers.status IN (:...statuses)', {
+          statuses: statuses,
+        });
+      }
+
       const [items, count] = await query
         .orderBy('couriers.status', 'ASC')
         .addOrderBy('couriers.name', 'ASC')

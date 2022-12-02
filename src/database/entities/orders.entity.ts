@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -32,6 +33,7 @@ export enum OrdersServiceStatus {
 }
 
 @Entity({ name: 'deliveries_orders' })
+@Index(['logistic_platform', 'service_status', 'deleted_at'])
 export class OrdersDocument {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -68,6 +70,7 @@ export class OrdersDocument {
   @Column({ nullable: true })
   driver_phone: string;
 
+  @Index()
   @Column({
     type: 'enum',
     enum: OrdersServiceStatus,
@@ -78,6 +81,7 @@ export class OrdersDocument {
   @Column({ nullable: true })
   tracking_url: string;
 
+  @Index()
   @Column({ default: 'BITESHIP' })
   logistic_platform: string;
 
@@ -87,6 +91,7 @@ export class OrdersDocument {
   @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date | string;
 
+  @Index()
   @DeleteDateColumn({ type: 'timestamptz', nullable: true, select: false })
   deleted_at: Date;
 }
