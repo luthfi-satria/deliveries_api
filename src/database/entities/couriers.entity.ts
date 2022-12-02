@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -13,16 +14,22 @@ export enum CourierStatus {
 }
 
 @Entity({ name: 'deliveries_couriers' })
+@Index(['code', 'name', 'service_name', 'status'])
+@Index(['code', 'name', 'status'])
+@Index(['name', 'status'])
 export class CourierDocument {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Index()
   @Column()
   name: string;
 
+  @Index()
   @Column()
   code: string;
 
+  @Index()
   @Column()
   service_name: string;
 
@@ -47,6 +54,7 @@ export class CourierDocument {
   @Column()
   duration_unit: string;
 
+  @Index()
   @Column({
     type: 'enum',
     enum: CourierStatus,
