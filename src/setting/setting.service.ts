@@ -62,7 +62,7 @@ export class SettingService {
       const element = param;
       const index = _.findIndex(settings, { name: element.name });
       if (index >= 0) {
-        settings[index].value = element.value;
+        settings[index].value = settings[index].value;
       } else {
         settings.push(element);
       }
