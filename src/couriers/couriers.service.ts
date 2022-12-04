@@ -174,8 +174,8 @@ export class CouriersService {
 
         if (elogCouriersPrice && elogCouriersPrice.data) {
           ElogCouriers['ongkir'] = elogCouriersPrice.data.total_price;
+          itemsWithInfos.push(ElogCouriers);
         }
-        itemsWithInfos.push(ElogCouriers);
       } else {
         itemsWithInfos = [...items];
       }

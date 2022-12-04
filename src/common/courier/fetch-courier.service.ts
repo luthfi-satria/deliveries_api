@@ -162,16 +162,10 @@ export class FetchCourierService {
 
       return response;
     } catch (e) {
-      console.log(e.response, 'ERROR');
+      console.log(e.response.data, 'ERROR');
 
-      if (e.response.data.code == 40001002) {
+      if (e.response.data.status == 'error') {
         return [];
-      }
-
-      if (e.response.data && e.response.status) {
-        throw new HttpException(e.response.data, e.response.status);
-      } else {
-        throw new InternalServerErrorException();
       }
     }
   }
