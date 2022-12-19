@@ -107,9 +107,15 @@ export class FetchCourierService {
   async fetchElogPrice(data: FetchCourierWithPrice): Promise<any> {
     try {
       const elogSettings = await this.elogService.getElogSettings();
+      const elogStatus = elogSettings['elog_active'][0];
       const elogUrl = elogSettings['elog_api_url'][0];
       const elogUsername = elogSettings['elog_username'][0];
       const elogPassword = elogSettings['elog_password'][0];
+
+      // IF ELOG IS NOT ACTIVE
+      if (elogStatus == 0) {
+        return [];
+      }
 
       const requestData = {
         pickup_destinations: [
