@@ -45,7 +45,7 @@ export class CronElogRecreateMultipickupService {
     const lastSequence = await this.checkLastJobsSequence();
     this.logger.log('CHECKING ELOG COUNTER ' + lastSequence);
 
-    if (lastSequence == 5) {
+    if (lastSequence == 3) {
       console.log(
         '##################################################################',
       );
@@ -245,7 +245,7 @@ export class CronElogRecreateMultipickupService {
           'response_payload',
         ])
         .where('logistic_platform = :platform', { platform: 'ELOG' })
-        .andWhere(`created_at > (now() - (20 * interval '1 minute'))`)
+        .andWhere(`created_at > now()::timestamp::date`)
         .andWhere('service_status IN (:...status)', {
           status: [OrdersServiceStatus.Placed],
         })
@@ -290,7 +290,7 @@ export class CronElogRecreateMultipickupService {
     const lastJobs = CounterJob ? CounterJob.data.counter : null;
 
     await CounterJob?.remove();
-    const lastSequence = lastJobs && lastJobs < 5 ? lastJobs + 1 : 1;
+    const lastSequence = lastJobs && lastJobs < 3 ? lastJobs + 1 : 1;
 
     await this.createRedisJobs(lastSequence);
     return lastSequence;
