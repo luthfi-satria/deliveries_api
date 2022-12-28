@@ -103,17 +103,16 @@ export class CouriersService {
           );
         });
 
-      console.log('couriers_count: ' + count);
-
       let itemsWithInfos: any[] = [];
       if (isIncludePrice && items.length) {
         const CourierCodesObj: any = {};
         const CourierPrices: any = {};
         let ElogCouriers = {};
         items.forEach((courier: any) => {
-          CourierCodesObj[courier.code] = true;
           if (courier.code == 'elog') {
             ElogCouriers = courier;
+          } else {
+            CourierCodesObj[courier.code] = true;
           }
         });
 
