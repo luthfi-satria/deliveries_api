@@ -22,6 +22,7 @@ import { CommonService } from 'src/common/common.service';
 import { DeliveriesMultipleService } from 'src/deliveries/deliveries-multiple.service';
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { NatsService } from 'src/common/nats/nats/nats.service';
+import { diffInMinutes, getFormatDate } from 'src/utils/general-utils';
 // import { DeliveriesMultipleDummyService } from 'src/deliveries/deliveries-multiple-dummy.service';
 
 @Injectable()
@@ -60,125 +61,119 @@ export class CronElogRecreateMultipickupService {
       const deliveriesObj = [];
       const historyObj = [];
       const natsPayload = [];
+      const dateNow = getFormatDate(new Date());
 
       for (const rows of pendingDeliveries) {
         const group_id = rows.order_id;
-        this.logger.log(`CHECKING QUEUE JOBS: elogsPendingQueue_${group_id}`);
-        const elogPendingQueue = await this.deliveriesQueue.getJob(
-          `elogsPendingQueue_${group_id}`,
+        const timeDiff = diffInMinutes(rows.created_at, dateNow);
+        console.log(
+          `${rows.created_at} and ${dateNow} = ${timeDiff} Minutes`,
+          '(TIME DIFF IN MINUTES)',
         );
 
-        if (elogPendingQueue) {
-          const queueData = elogPendingQueue.data;
-          this.logger.log('QUEUE JOB DATA =>');
-          console.log(queueData);
-
+        if (timeDiff > 30) {
           this.logger.log(
-            `CHECKING elogsPendingQueue_${group_id} JOBS COUNTER: ${queueData.counter}`,
+            `DRIVER NOT FOUND IN 30 MINUTES, CANCELLING ORDERS ID: ${group_id}`,
           );
-          // JIKA COUNTER KURANG DARI 3
-          if (queueData.counter < 3) {
-            this.logger.log(`CALL ELOG APIS: elogsPendingQueue_${group_id}`);
+          const { deliveriesData, historyData } =
+            await this.fetchCancellingOrders(rows);
 
-            const elogResponse = await this.callElogApis(group_id, queueData);
-            // const elogResponse =
-            //   this.dummyDeliveriesMultiPickupData.dummyOrderDelivery();
+          deliveriesObj.push(deliveriesData);
+          historyObj.push(historyData);
+          // nats message broker payload
+          natsPayload.push(rows.order_id);
+        } else {
+          this.logger.log(`CHECKING QUEUE JOBS: elogsPendingQueue_${group_id}`);
+          const elogPendingQueue = await this.deliveriesQueue.getJob(
+            `elogsPendingQueue_${group_id}`,
+          );
 
-            // JIKA BERHASIL CREATE ORDER
-            if (elogResponse && elogResponse.status == 'success') {
-              this.logger.log(`DRIVER FOUND: elogsPendingQueue_${group_id}`);
-              const status = this.deliveriesMultipleService.statusConverter(
-                elogResponse.data.status,
+          if (elogPendingQueue) {
+            const queueData = elogPendingQueue.data;
+            this.logger.log('QUEUE JOB DATA =>');
+            console.log(queueData);
+
+            this.logger.log(
+              `CHECKING elogsPendingQueue_${group_id} JOBS COUNTER: ${queueData.counter}`,
+            );
+            // JIKA COUNTER KURANG DARI 3
+            if (queueData.counter < 3) {
+              this.logger.log(`CALL ELOG APIS: elogsPendingQueue_${group_id}`);
+
+              const elogResponse = await this.callElogApis(group_id, queueData);
+              // const elogResponse =
+              //   this.dummyDeliveriesMultiPickupData.dummyOrderDelivery();
+
+              // JIKA BERHASIL CREATE ORDER
+              if (elogResponse && elogResponse.status == 'success') {
+                this.logger.log(`DRIVER FOUND: elogsPendingQueue_${group_id}`);
+                const status = this.deliveriesMultipleService.statusConverter(
+                  elogResponse.data.status,
+                );
+
+                // DELIVERY THIRD PARTY REQUEST OBJECTS
+                thirdPartyObj.push({
+                  request: {
+                    group_id: rows.group_id,
+                    logistic_platform: rows.logistic_platform,
+                    header: queueData.elogHeaders,
+                    url: queueData.elogUrl,
+                    data: queueData.elogData,
+                    method: 'POST',
+                  },
+                  response: elogResponse,
+                  code: elogResponse.data.id,
+                });
+
+                // delivery orders data Objects for updates
+                const deliveriesData = {
+                  id: rows.id,
+                  order_id: rows.order_id,
+                  delivery_id: elogResponse.data.id,
+                  price: rows.price,
+                  response_payload: elogResponse,
+                  status: status.orderStatus,
+                  service_status: status.deliveryStatus,
+                  waybill_id: elogResponse.data.airway_bill,
+                  tracking_url: elogResponse.data.tracking_url,
+                  logistic_platform: rows.logistic_platform,
+                  driver_name: elogResponse.data.driver_name,
+                  driver_phone: elogResponse.data.driver_phone_no,
+                };
+                deliveriesObj.push(deliveriesData);
+
+                // delivery orders history Objects
+                const historyData = {
+                  order_id: rows.id,
+                  status: status.orderStatus,
+                  service_status: status.deliveryStatus,
+                };
+                historyObj.push(historyData);
+
+                // RECREATE CACHING
+                await this.recreateCaching(queueData, group_id);
+                // await this.deliveriesMultipleService.removeElogQueue(group_id);
+              }
+              // JIKA GAGAL CREATE ORDER
+              // RECREATE REDIS CACHE
+              else {
+                await this.recreateCaching(queueData, group_id);
+              }
+            }
+            // BATALKAN ORDERS JIKA LEBIH DARI 3X
+            else {
+              this.logger.log(
+                `DRIVER NOT FOUND 3 TIMES, CANCELLING ORDERS ID: ${group_id}`,
               );
 
-              // DELIVERY THIRD PARTY REQUEST OBJECTS
-              thirdPartyObj.push({
-                request: {
-                  group_id: rows.group_id,
-                  logistic_platform: rows.logistic_platform,
-                  header: queueData.elogHeaders,
-                  url: queueData.elogUrl,
-                  data: queueData.elogData,
-                  method: 'POST',
-                },
-                response: elogResponse,
-                code: elogResponse.data.id,
-              });
+              const { deliveriesData, historyData } =
+                await this.fetchCancellingOrders(rows);
 
-              // delivery orders data Objects for updates
-              const deliveriesData = {
-                id: rows.id,
-                order_id: rows.order_id,
-                delivery_id: elogResponse.data.id,
-                price: rows.price,
-                response_payload: elogResponse,
-                status: status.orderStatus,
-                service_status: status.deliveryStatus,
-                waybill_id: elogResponse.data.airway_bill,
-                tracking_url: elogResponse.data.tracking_url,
-                logistic_platform: rows.logistic_platform,
-                driver_name: elogResponse.data.driver_name,
-                driver_phone: elogResponse.data.driver_phone_no,
-              };
               deliveriesObj.push(deliveriesData);
-
-              // delivery orders history Objects
-              const historyData = {
-                order_id: rows.id,
-                status: status.orderStatus,
-                service_status: status.deliveryStatus,
-              };
               historyObj.push(historyData);
-
-              // RECREATE CACHING
-              await this.recreateCaching(queueData, group_id);
-              // await this.deliveriesMultipleService.removeElogQueue(group_id);
+              // nats message broker payload
+              natsPayload.push(rows.order_id);
             }
-            // JIKA GAGAL CREATE ORDER
-            // RECREATE REDIS CACHE
-            else {
-              await this.recreateCaching(queueData, group_id);
-            }
-          }
-          // BATALKAN ORDERS JIKA LEBIH DARI 3X
-          else {
-            this.logger.log(
-              `DRIVER NOT FOUND 3 TIMES, CANCELLING ORDERS ID: ${group_id}`,
-            );
-
-            // delivery orders data Objects for updates
-            const deliveriesData = {
-              id: rows.id,
-              order_id: rows.order_id,
-              delivery_id: rows.delivery_id,
-              price: rows.price,
-              response_payload: {
-                success: false,
-                message: 'CANCELLED BY SYSTEM',
-              },
-              status: OrdersStatus.DRIVER_NOT_FOUND,
-              service_status: OrdersServiceStatus.Cancelled,
-              waybill_id: null,
-              tracking_url: null,
-              logistic_platform: rows.logistic_platform,
-              driver_name: null,
-              driver_phone: null,
-            };
-            deliveriesObj.push(deliveriesData);
-
-            // delivery orders history Objects
-            const historyData = {
-              order_id: rows.id,
-              status: OrdersStatus.CANCELLED,
-              service_status: OrdersServiceStatus.Cancelled,
-            };
-            historyObj.push(historyData);
-
-            // nats message broker payload
-            natsPayload.push(rows.order_id);
-
-            // HAPUS REDIS CACHE
-            await this.deliveriesMultipleService.removeElogQueue(rows.order_id);
           }
         }
       }
@@ -243,6 +238,7 @@ export class CronElogRecreateMultipickupService {
           'price',
           'logistic_platform',
           'response_payload',
+          'created_at',
         ])
         .where('logistic_platform = :platform', { platform: 'ELOG' })
         .andWhere(`created_at > now()::timestamp::date`)
@@ -390,5 +386,37 @@ export class CronElogRecreateMultipickupService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async fetchCancellingOrders(rows) {
+    // delivery orders data Objects for updates
+    const deliveriesData = {
+      id: rows.id,
+      order_id: rows.order_id,
+      delivery_id: rows.delivery_id,
+      price: rows.price,
+      response_payload: {
+        success: false,
+        message: 'CANCELLED BY SYSTEM',
+      },
+      status: OrdersStatus.DRIVER_NOT_FOUND,
+      service_status: OrdersServiceStatus.Cancelled,
+      waybill_id: null,
+      tracking_url: null,
+      logistic_platform: rows.logistic_platform,
+      driver_name: null,
+      driver_phone: null,
+    };
+
+    // delivery orders history Objects
+    const historyData = {
+      order_id: rows.id,
+      status: OrdersStatus.CANCELLED,
+      service_status: OrdersServiceStatus.Cancelled,
+    };
+
+    // HAPUS REDIS CACHE
+    await this.deliveriesMultipleService.removeElogQueue(rows.order_id);
+    return { deliveriesData, historyData };
   }
 }
