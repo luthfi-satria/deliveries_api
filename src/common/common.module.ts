@@ -14,7 +14,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CourierRepository } from 'src/database/repository/couriers.repository';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
-import { NatsService } from './nats/nats/nats.service';
+// import { NatsService } from './nats/nats/nats.service';
 import { BullModule } from '@nestjs/bull';
 import { RedisDeliveryService } from './redis/redis-delivery.service';
 import { RedisDeliveryProcessor } from './redis/redis-delivery.processor';
@@ -24,6 +24,8 @@ import { ThirdPartyRequestsRepository } from 'src/database/repository/third-part
 import { DeliveriesMultipleService } from 'src/deliveries/deliveries-multiple.service';
 import { ElogService } from 'src/elog/elog.service';
 import { DeliveriesMultipleDummyService } from 'src/deliveries/deliveries-multiple-dummy.service';
+import { RabbitMQService } from 'src/rabbitmq/rabbitmq.service';
+import { RabbitMQController } from 'src/rabbitmq/rabbitmq.controller';
 
 @Global()
 @Module({
@@ -73,11 +75,12 @@ import { DeliveriesMultipleDummyService } from 'src/deliveries/deliveries-multip
     RedisDeliveryService,
     RedisDeliveryProcessor,
     CouriersService,
-    NatsService,
+    // NatsService,
     ElogService,
     DeliveriesMultipleDummyService,
+    RabbitMQService,
   ],
   exports: [CommonStorageService, NotificationService, FetchCourierService],
-  controllers: [NatsController],
+  controllers: [NatsController, RabbitMQController],
 })
 export class CommonModule {}

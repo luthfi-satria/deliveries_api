@@ -14,7 +14,7 @@ import {
 import { ResponseService } from 'src/response/response.service';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
 import { MessageService } from 'src/message/message.service';
-import { NatsService } from 'src/common/nats/nats/nats.service';
+// import { NatsService } from 'src/common/nats/nats/nats.service';
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { unescape } from 'querystring';
 import {
@@ -27,6 +27,7 @@ import { Queue } from 'bull';
 import { InjectQueue, OnGlobalQueueWaiting } from '@nestjs/bull';
 import { RMessage } from 'src/response/response.interface';
 import { DeliveriesMultipleDummyService } from './deliveries-multiple-dummy.service';
+import { RabbitMQService } from 'src/rabbitmq/rabbitmq.service';
 
 @Injectable()
 export class DeliveriesMultipleService {
@@ -36,7 +37,7 @@ export class DeliveriesMultipleService {
     private readonly responseService: ResponseService,
     private readonly settingRepository: SettingsRepository,
     private readonly messageService: MessageService,
-    private readonly natsService: NatsService,
+    private readonly rabbitMQService: RabbitMQService,
     private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
     private readonly orderHistoriesRepository: OrderHistoriesRepository,
     private readonly dummyDeliveriesData: DeliveriesMultipleDummyService,
@@ -212,7 +213,7 @@ export class DeliveriesMultipleService {
         };
 
         //** BROADCAST */
-        this.natsService.clientEmit(
+        this.rabbitMQService.clientEmit(
           `deliveries.order.multipickupfailed`,
           deliveryData,
         );
@@ -310,7 +311,7 @@ export class DeliveriesMultipleService {
         eventName = 'reordered';
       }
       eventName = eventName.toLowerCase();
-      this.natsService.clientEmit(
+      this.rabbitMQService.clientEmit(
         `deliveries.order.multipickup${eventName}`,
         getOrder,
       );
@@ -323,7 +324,7 @@ export class DeliveriesMultipleService {
       };
 
       //broadcast
-      this.natsService.clientEmit(
+      this.rabbitMQService.clientEmit(
         `deliveries.order.multipickupfailed`,
         deliveryData,
       );
@@ -426,7 +427,10 @@ export class DeliveriesMultipleService {
     const order = await this.ordersRepository.save(orderDelivery);
 
     //broadcast
-    this.natsService.clientEmit(`deliveries.order.multipickupcancelled`, order);
+    this.rabbitMQService.clientEmit(
+      `deliveries.order.multipickupcancelled`,
+      order,
+    );
 
     return cancelOrderDelivery;
   }

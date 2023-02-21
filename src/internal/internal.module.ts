@@ -3,7 +3,7 @@ import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
-import { NatsService } from 'src/common/nats/nats/nats.service';
+// import { NatsService } from 'src/common/nats/nats/nats.service';
 import { RedisDeliveryService } from 'src/common/redis/redis-delivery.service';
 import { CouriersService } from 'src/couriers/couriers.service';
 import { CourierRepository } from 'src/database/repository/couriers.repository';
@@ -17,6 +17,7 @@ import { DeliveriesService } from 'src/deliveries/deliveries.service';
 import { ElogService } from 'src/elog/elog.service';
 import { ElogRepository } from 'src/elog/repository/elog.repository';
 import { MessageService } from 'src/message/message.service';
+import { RabbitMQService } from 'src/rabbitmq/rabbitmq.service';
 import { ResponseService } from 'src/response/response.service';
 import { SettingService } from 'src/setting/setting.service';
 import { AuthInternalService } from './auth-internal.service';
@@ -52,10 +53,11 @@ import { InternalMultipickupService } from './multipickup-internal.service';
     SettingService,
     CouriersService,
     DeliveriesService,
-    NatsService,
+    // NatsService,
     ElogService,
     DeliveriesMultipleService,
     DeliveriesMultipleDummyService,
+    RabbitMQService,
   ],
   exports: [AuthInternalService],
 })

@@ -3,7 +3,7 @@ import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
-import { NatsService } from 'src/common/nats/nats/nats.service';
+// import { NatsService } from 'src/common/nats/nats/nats.service';
 import { RedisDeliveryService } from 'src/common/redis/redis-delivery.service';
 import { CouriersService } from 'src/couriers/couriers.service';
 import { CourierRepository } from 'src/database/repository/couriers.repository';
@@ -12,6 +12,7 @@ import { OrdersRepository } from 'src/database/repository/orders.repository';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { MessageService } from 'src/message/message.service';
+import { RabbitMQService } from 'src/rabbitmq/rabbitmq.service';
 import { ResponseService } from 'src/response/response.service';
 import { SettingService } from 'src/setting/setting.service';
 import { DeliveriesMultipleDummyService } from './deliveries-multiple-dummy.service';
@@ -41,10 +42,11 @@ import { DeliveriesService } from './deliveries.service';
     CommonService,
     ResponseService,
     MessageService,
-    NatsService,
+    // NatsService,
     SettingService,
     RedisDeliveryService,
     DeliveriesMultipleDummyService,
+    RabbitMQService,
   ],
 })
 export class DeliveriesModule {}

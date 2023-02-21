@@ -4,7 +4,7 @@ import { CallbacksController } from './callbacks.controller';
 import { ResponseService } from 'src/response/response.service';
 import { MessageService } from 'src/message/message.service';
 import { DeliveriesService } from 'src/deliveries/deliveries.service';
-import { NatsService } from 'src/common/nats/nats/nats.service';
+// import { NatsService } from 'src/common/nats/nats/nats.service';
 import { CouriersService } from 'src/couriers/couriers.service';
 import { CommonService } from 'src/common/common.service';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
@@ -20,6 +20,7 @@ import { ThirdPartyCallbacksRepository } from 'src/database/repository/third-par
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
 import { DeliveriesMultipleService } from 'src/deliveries/deliveries-multiple.service';
 import { DeliveriesMultipleDummyService } from 'src/deliveries/deliveries-multiple-dummy.service';
+import { RabbitMQService } from 'src/rabbitmq/rabbitmq.service';
 
 @Module({
   imports: [
@@ -42,13 +43,14 @@ import { DeliveriesMultipleDummyService } from 'src/deliveries/deliveries-multip
     ResponseService,
     MessageService,
     DeliveriesService,
-    NatsService,
+    // NatsService,
     CouriersService,
     CommonService,
     SettingService,
     RedisDeliveryService,
     DeliveriesMultipleService,
     DeliveriesMultipleDummyService,
+    RabbitMQService,
   ],
 })
 export class CallbacksModule {}
