@@ -1,11 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
-import { NatsService } from 'src/common/nats/nats/nats.service';
+// import { NatsService } from 'src/common/nats/nats/nats.service';
 import { CouriersService } from 'src/couriers/couriers.service';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import { MessageService } from 'src/message/message.service';
+import { RabbitMQService } from 'src/rabbitmq/rabbitmq.service';
 import { ResponseService } from 'src/response/response.service';
 import { DeliveriesService } from './deliveries.service';
 
@@ -32,8 +33,12 @@ describe('DeliveriesService', () => {
           provide: CommonService,
           useValue: {},
         },
+        // {
+        //   provide: NatsService,
+        //   useValue: {},
+        // },
         {
-          provide: NatsService,
+          provide: RabbitMQService,
           useValue: {},
         },
         {

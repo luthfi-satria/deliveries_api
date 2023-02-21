@@ -6,7 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { CommonService } from 'src/common/common.service';
-import { NatsService } from 'src/common/nats/nats/nats.service';
+// import { NatsService } from 'src/common/nats/nats/nats.service';
 import { CouriersService } from 'src/couriers/couriers.service';
 import {
   OrderHistoriesDocument,
@@ -24,6 +24,7 @@ import moment from 'moment';
 import { ResponseService } from 'src/response/response.service';
 import { MessageService } from 'src/message/message.service';
 import { DeliveriesMultipleService } from './deliveries-multiple.service';
+import { RabbitMQService } from 'src/rabbitmq/rabbitmq.service';
 
 @Injectable()
 export class DeliveriesService {
@@ -34,11 +35,12 @@ export class DeliveriesService {
     private readonly commonService: CommonService,
     private readonly ordersRepository: OrdersRepository,
     private readonly orderHistoriesRepository: OrderHistoriesRepository,
-    private readonly natsService: NatsService,
+    private readonly rabbitMQService: RabbitMQService,
     private readonly messageService: MessageService,
     private readonly responseService: ResponseService,
     private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
     private readonly deliveryMultipleService: DeliveriesMultipleService,
+    private readonly rabbitService: RabbitMQService,
   ) {}
 
   async createOrder(data: any) {
@@ -185,7 +187,10 @@ export class DeliveriesService {
           };
 
           //broadcast
-          this.natsService.clientEmit(`deliveries.order.failed`, deliveryData);
+          this.rabbitMQService.clientEmit(
+            `deliveries.order.failed`,
+            deliveryData,
+          );
 
           this.saveNegativeResultOrder(deliveryData, err);
         });
@@ -229,7 +234,10 @@ export class DeliveriesService {
         ) {
           eventName = 'reordered';
         }
-        this.natsService.clientEmit(`deliveries.order.${eventName}`, getOrder);
+        this.rabbitMQService.clientEmit(
+          `deliveries.order.${eventName}`,
+          getOrder,
+        );
       } else {
         const deliveryData: Partial<OrdersDocument> = {
           order_id: data.id,
@@ -238,7 +246,10 @@ export class DeliveriesService {
         };
 
         //broadcast
-        this.natsService.clientEmit(`deliveries.order.failed`, deliveryData);
+        this.rabbitMQService.clientEmit(
+          `deliveries.order.failed`,
+          deliveryData,
+        );
 
         this.saveNegativeResultOrder(deliveryData, 'null');
       }
@@ -355,8 +366,12 @@ export class DeliveriesService {
     const order = await this.ordersRepository.save(orderDelivery);
 
     //broadcast
-    this.natsService.clientEmit(`deliveries.order.cancelled`, order);
+    this.rabbitMQService.clientEmit(`deliveries.order.cancelled`, order);
 
     return cancelOrderDelivery;
+  }
+
+  async testRmq(data) {
+    return this.rabbitService.clientEmit(`deliveries.order.rmq`, data);
   }
 }

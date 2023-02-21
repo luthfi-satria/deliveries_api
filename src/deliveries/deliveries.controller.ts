@@ -73,4 +73,14 @@ export class DeliveriesController {
       this.messageService.get('delivery.general.success'),
     );
   }
+
+  @Post('/testing-rmq')
+  @ResponseStatusCode()
+  async testRmq(@Body() data: any): Promise<any> {
+    await this.deliveriesService.testRmq(data);
+    return this.responseService.success(
+      true,
+      this.messageService.get('delivery.general.success'),
+    );
+  }
 }

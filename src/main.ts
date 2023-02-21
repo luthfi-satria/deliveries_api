@@ -1,7 +1,7 @@
-import { NatsTransportStrategy } from '@alexy4744/nestjs-nats-jetstream-transporter';
+// import { NatsTransportStrategy } from '@alexy4744/nestjs-nats-jetstream-transporter';
 import { BadRequestException, Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { CustomStrategy } from '@nestjs/microservices';
+import { RmqOptions, Transport } from '@nestjs/microservices';
 import { AppModule } from './app.module';
 
 const logger = new Logger('main');
@@ -32,28 +32,41 @@ async function bootstrap() {
     }),
   );
 
-  const microservice = app.connectMicroservice<CustomStrategy>({
-    strategy: new NatsTransportStrategy({
-      connection: {
-        servers: process.env.NATS_SERVERS.split(','),
-      },
-      streams: [
-        {
-          name: 'deliveries',
-          subjects: ['deliveries.order.*'],
-        },
-      ],
-      consumer: (opt) => {
-        // durable
-        opt.durable('deliveries');
+  // const microservice = app.connectMicroservice<CustomStrategy>({
+  //   strategy: new NatsTransportStrategy({
+  //     connection: {
+  //       servers: process.env.NATS_SERVERS.split(','),
+  //     },
+  //     streams: [
+  //       {
+  //         name: 'deliveries',
+  //         subjects: ['deliveries.order.*'],
+  //       },
+  //     ],
+  //     consumer: (opt) => {
+  //       // durable
+  //       opt.durable('deliveries');
 
-        // queue group
-        opt.queue('deliveries');
+  //       // queue group
+  //       opt.queue('deliveries');
+  //     },
+  //   }),
+  // });
+
+  // microservice.listen();
+
+  const rmq = app.connectMicroservice<RmqOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [process.env.RABBITMQ_HOST],
+      queue: 'deliveries',
+      noAck: false,
+      queueOptions: {
+        durable: true,
       },
-    }),
+    },
   });
-
-  microservice.listen();
+  rmq.listen();
 
   app.listen(process.env.HTTP_PORT || 4009, () => {
     logger.log(`Running on ${process.env.HTTP_PORT || 4009}`);
