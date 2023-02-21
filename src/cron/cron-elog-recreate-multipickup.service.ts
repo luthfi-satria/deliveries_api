@@ -21,8 +21,9 @@ import {
 import { CommonService } from 'src/common/common.service';
 import { DeliveriesMultipleService } from 'src/deliveries/deliveries-multiple.service';
 import { ThirdPartyRequestsRepository } from 'src/database/repository/third-party-request.repository';
-import { NatsService } from 'src/common/nats/nats/nats.service';
+// import { NatsService } from 'src/common/nats/nats/nats.service';
 import { diffInMinutes, getFormatDate } from 'src/utils/general-utils';
+import { RabbitMQService } from 'src/rabbitmq/rabbitmq.service';
 // import { DeliveriesMultipleDummyService } from 'src/deliveries/deliveries-multiple-dummy.service';
 
 @Injectable()
@@ -36,7 +37,7 @@ export class CronElogRecreateMultipickupService {
     private readonly deliveriesMultipleService: DeliveriesMultipleService,
     private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
     // private readonly dummyDeliveriesMultiPickupData: DeliveriesMultipleDummyService,
-    private readonly natsService: NatsService,
+    private readonly rabbitMQService: RabbitMQService,
     @InjectQueue('deliveries') private readonly deliveriesQueue: Queue,
   ) {}
 
@@ -202,7 +203,7 @@ export class CronElogRecreateMultipickupService {
 
       // CREATE BULK MULTIPICKUPCANCELLED DATA
       if (natsPayload.length > 0) {
-        this.natsService.clientEmit(
+        this.rabbitMQService.clientEmit(
           `deliveries.order.multipickupbulkcancelled`,
           {
             // NATS PAYLOAD BERISI LIST ORDER ID (GROUP ID) - KHUSUS ELOG

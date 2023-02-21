@@ -5,7 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
-import { NatsService } from 'src/common/nats/nats/nats.service';
+// import { NatsService } from 'src/common/nats/nats/nats.service';
 import { OrderHistoriesRepository } from 'src/database/repository/orders-history.repository';
 import { OrdersRepository } from 'src/database/repository/orders.repository';
 import { SettingsRepository } from 'src/database/repository/settings.repository';
@@ -14,6 +14,7 @@ import { DeliveriesMultipleDummyService } from 'src/deliveries/deliveries-multip
 import { DeliveriesMultipleService } from 'src/deliveries/deliveries-multiple.service';
 import { ElogService } from 'src/elog/elog.service';
 import { MessageService } from 'src/message/message.service';
+import { RabbitMQService } from 'src/rabbitmq/rabbitmq.service';
 import { ResponseService } from 'src/response/response.service';
 import { CronElogRecreateMultipickupService } from './cron-elog-recreate-multipickup.service';
 import { CronElogController } from './cron-elog.controller';
@@ -44,8 +45,9 @@ import { CronElogService } from './cron-elog.service';
     CronElogRecreateMultipickupService,
     CommonService,
     DeliveriesMultipleService,
-    NatsService,
+    // NatsService,
     DeliveriesMultipleDummyService,
+    RabbitMQService,
   ],
   exports: [TypeOrmModule],
 })

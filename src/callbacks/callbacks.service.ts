@@ -1,15 +1,16 @@
 import { ThirdPartyCallbacksRepository } from './../database/repository/third-party-callback.repository';
 import { ThirdPartyRequestsRepository } from './../database/repository/third-party-request.repository';
 import { Injectable } from '@nestjs/common';
-import { NatsService } from 'src/common/nats/nats/nats.service';
+// import { NatsService } from 'src/common/nats/nats/nats.service';
 import { OrderHistoriesDocument } from 'src/database/entities/orders-history.entity';
 import { DeliveriesService } from 'src/deliveries/deliveries.service';
+import { RabbitMQService } from 'src/rabbitmq/rabbitmq.service';
 
 @Injectable()
 export class CallbacksService {
   constructor(
     private readonly deliveriesService: DeliveriesService,
-    private readonly natsService: NatsService,
+    private readonly rabbitMQService: RabbitMQService,
     private readonly thirdPartyRequestsRepository: ThirdPartyRequestsRepository,
     private readonly thirdPartyCallbacksRepository: ThirdPartyCallbacksRepository,
   ) {}
@@ -98,7 +99,7 @@ export class CallbacksService {
         );
 
         //broadcast
-        this.natsService.clientEmit(`deliveries.order.${eventName}`, order);
+        this.rabbitMQService.clientEmit(`deliveries.order.${eventName}`, order);
       }
       return { status: true };
     } else {
